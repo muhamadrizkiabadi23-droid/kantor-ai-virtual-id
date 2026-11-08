@@ -1,5 +1,5 @@
 [phases.setup]
-nixPackages = ["nodejs-20", "npm-10"]
+nixPackages = ["nodejs-20", "npm-10", "python3", "make", "gcc", "gcc-c++"]
 
 [phases.install]
 cmds = ["npm ci --omit=dev"]

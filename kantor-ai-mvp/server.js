@@ -7,8 +7,8 @@ const crypto = require("node:crypto");
 const ROOT = __dirname;
 const DEFAULT_PORT = 4173;
 const PORT = Number(process.env.PORT || DEFAULT_PORT);
-// Codespaces butuh bind 0.0.0.0; Railway sudah mengatur PORT.
-const HOST = process.env.HOST || (process.env.CODESPACES ? "0.0.0.0" : "127.0.0.1");
+// Railway & Codespaces butuh bind 0.0.0.0
+const HOST = process.env.HOST || (process.env.CODESPACES || process.env.RAILWAY_STATIC_URL ? "0.0.0.0" : "127.0.0.1");
 
 /* ------------------------------------------------------------------ */
 /* Penyimpanan akun (JSON — cukup untuk prototype)                     */
