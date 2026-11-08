@@ -336,6 +336,11 @@ function createServer(port) {
     const pathname = url.pathname;
     const method = request.method;
 
+    if (pathname === "/health" && method === "GET") {
+      sendJson(response, 200, { ok: true, service: "kantor-ai", ts: Date.now() });
+      return;
+    }
+
     if (await handleAuth(request, response, pathname, method)) return;
 
     if (pathname === "/api/agent" && method === "POST") {
@@ -399,15 +404,27 @@ function createServer(port) {
       });
       response.end(content);
     });
-  }).listen(port, HOST);
+  });
+}
+
+function attachServerEvents(server) {
+  server.on("listening", () => {
+    const addr = server.address();
+    console.log(`[server] listening on http://${addr.address}:${addr.port} (${addr.family})`);
+  });
+  server.on("error", (error) => {
+    console.error(`[server] ERROR ${error.code || ""}: ${error.message}`);
+  });
+  return server;
 }
 
 async function startServer(port = PORT) {
   const isCloud = HOST === "0.0.0.0";
   // Di cloud (Railway/Codespaces) pakai PORT langsung — jangan resolvePort
   const selectedPort = isCloud ? port : await resolvePort(port);
-  const server = createServer(selectedPort);
-  const shownHost = HOST === "0.0.0.0" ? "localhost" : HOST;
+  const server = attachServerEvents(createServer());
+  server.listen(selectedPort, HOST);
+  const shownHost = HOST === "0.0.0.0" ? "0.0.0.0" : HOST;
   console.log(`Kantor AI Full Virtual: http://${shownHost}:${selectedPort}`);
   if (HOST === "0.0.0.0") {
     console.log("Mode cloud: bind 0.0.0.0 (port forwarding aktif).");
