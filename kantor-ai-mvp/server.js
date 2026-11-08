@@ -195,7 +195,7 @@ function runHermesOnce(agentName, prompt, callback) {
     callback({ ok: false, reply: `${agentName}: backend AI (hermes CLI) belum terpasang di server ini.` });
     return;
   }
-  const instruction = `Kamu ${agentName}, karyawan di Kantor AI Merah Putih. Perintah bos: "${prompt}". Balas singkat maksimal 2 kalimat dalam Bahasa Indonesia, sebagai ${agentName}.`;
+  const instruction = `Kamu ${agentName}, karyawan di KANTOR AI ID. Perintah bos: "${prompt}". Balas singkat maksimal 2 kalimat dalam Bahasa Indonesia, sebagai ${agentName}.`;
   const scratch = path.join(
     process.env.HOME || process.env.LOCALAPPDATA || process.env.TEMP || ".",
     ".hermes",

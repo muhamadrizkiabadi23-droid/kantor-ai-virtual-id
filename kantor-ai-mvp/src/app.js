@@ -801,7 +801,7 @@
       const socialCount = socialAccounts.length;
       const agentCount = AGENT_ROSTER.length;
       const coreCount = TEAM.length;
-      window.alert(`📊 LAPORAN KANTOR AI MERAH PUTIH\n\n` +
+      window.alert(`📊 LAPORAN KANTOR AI ID\n\n` +
         `Total tugas: ${counts.total}\n` +
         `Menunggu review: ${counts.review}\n` +
         `Disetujui: ${counts.approved}\n` +

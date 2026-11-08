@@ -257,7 +257,7 @@ export function createSupportPanel(getDiagnostics) {
     const diagnostics = getDiagnostics ? getDiagnostics() : {};
     const scan = lastScan;
     const lines = [
-      "LAPORAN BUG — Kantor AI Merah Putih (kantor 3D)",
+      "LAPORAN BUG — KANTOR AI ID (kantor 3D)",
       "",
       `Deskripsi: ${text || "(tidak diisi)"}`,
       `Waktu: ${new Date().toLocaleString("id-ID")}`,

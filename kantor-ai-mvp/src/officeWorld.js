@@ -3,7 +3,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 /**
- * officeWorld.js — Kantor AI Merah Putih.
+ * officeWorld.js — KANTOR AI ID.
  * SATU LANTAI luas, tata letak rapi 3x3, fasilitas lengkap & estetik:
  * masjid, kedai kopi, studio, ruang rapat, gym, lounge, pantry, workspace 48 meja.
  * Material PBR ringan + instanced mesh + merged geometry untuk performa.
