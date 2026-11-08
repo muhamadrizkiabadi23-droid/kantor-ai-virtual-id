@@ -65,6 +65,8 @@
           <button class="office-btn" id="office-view-toggle" type="button">Perspektif</button>
           <button class="office-btn" id="office-top-toggle" type="button" title="Tampilan atas — mudah klik NPC (T)">⬇ Atas</button>
           <button class="office-btn" id="office-day-toggle" type="button" title="Mode siang/malam (D)">Mode malam</button>
+          <button class="office-btn" id="office-sleep-toggle" type="button" title="Mode tidur (S)">💤 Tidur</button>
+          <button class="office-btn" id="office-bubble-toggle" type="button" title="Bubble (B)">💬 Bubble</button>
           <button class="office-btn" id="office-tour-toggle" type="button">🎬 Tur</button>
           <button class="office-btn" id="office-quality-toggle" type="button" title="Kualitas render">✨ Auto</button>
           <button class="office-btn" id="office-reset" type="button" title="Reset kamera (R)">Reset</button>
@@ -83,6 +85,9 @@
         </div>
       </div>
 
+      <!-- Render error overlay -->
+      <div id="office-render-error" class="office-render-error" hidden></div>
+
       <!-- HUD bottom-left: legend -->
       <div class="office-hud office-hud-bl">
         <div class="office-legend">
@@ -95,31 +100,34 @@
       </div>
 
       <!-- HUD bottom-right: agent card (hidden by default) -->
-      <div class="office-hud office-hud-br" id="office-agent-card" hidden>
-        <div class="hud-card-head">
-          <span class="hud-card-avatar" id="office-card-avatar">RA</span>
-          <div class="hud-card-id">
-            <strong id="office-card-name">Raka</strong>
-            <small id="office-card-role">Strategi &amp; brand</small>
-          </div>
-          <button class="hud-card-close" id="office-card-close" type="button" aria-label="Tutup detail">×</button>
-        </div>
-        <div class="hud-card-body" id="office-card-message">Siap membantu.</div>
-        <div class="hud-card-row">
-          <span>Status</span><span id="office-card-status">Siap</span>
-        </div>
-        <div class="hud-card-actions">
-          <button class="hud-act-primary" data-agent-cmd="laporan" type="button">Laporan</button>
-          <button class="hud-act-secondary" data-agent-cmd="kerja" type="button">Kerjakan tugas</button>
-          <button class="hud-act-secondary" data-agent-cmd="istirahat" type="button">Istirahat</button>
-          <button class="hud-act-danger" data-agent-cmd="rapat" type="button">Rapat</button>
-        </div>
-        <div class="hud-card-input">
-          <input type="text" id="office-card-input" placeholder="Perintah bebas untuk agen ini..." autocomplete="off">
-          <button class="hud-card-send" id="office-card-send" type="button">Kirim</button>
-        </div>
-        <div class="hud-card-history" id="office-card-history"></div>
-      </div>
+            <div class="office-hud office-hud-br" id="office-agent-card" hidden>
+              <div class="hud-card-head">
+                <span class="hud-card-avatar" id="office-card-avatar">RA</span>
+                <div class="hud-card-id">
+                  <strong id="office-card-name">Raka</strong>
+                  <small id="office-card-role">Strategi & brand</small>
+                </div>
+                <button class="hud-card-close" id="office-card-close" type="button" aria-label="Tutup detail">×</button>
+              </div>
+              <div class="hud-card-body" id="office-card-message">Siap membantu.</div>
+              <div class="hud-card-row">
+                <span>Status</span><span id="office-card-status">Siap</span>
+              </div>
+              <div class="hud-card-row">
+                <span>Tugas</span><span id="office-card-task">Tidak ada tugas aktif</span>
+              </div>
+              <div class="hud-card-actions">
+                <button class="hud-act-primary" data-agent-cmd="laporan" type="button">Laporan</button>
+                <button class="hud-act-secondary" data-agent-cmd="kerja" type="button">Kerjakan tugas</button>
+                <button class="hud-act-secondary" data-agent-cmd="istirahat" type="button">Istirahat</button>
+                <button class="hud-act-danger" data-agent-cmd="rapat" type="button">Rapat</button>
+              </div>
+              <form class="hud-card-form" id="office-card-form">
+                <input type="text" id="office-card-input" placeholder="Perintah bebas untuk agen ini..." autocomplete="off">
+                <button class="hud-card-send" id="office-card-send" type="submit">Kirim</button>
+              </form>
+              <div class="hud-card-chat" id="office-card-chat"></div>
+            </div>
 
       <!-- HUD bottom-center: room dock -->
       <div class="office-hud office-hud-dock" id="office-room-dock" role="navigation" aria-label="Navigasi ruangan">

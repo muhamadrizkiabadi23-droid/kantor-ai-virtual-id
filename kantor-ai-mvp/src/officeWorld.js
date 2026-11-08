@@ -11,8 +11,8 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 
 export const FLOOR_Y = { 1: 0 };
 export const BUILDING = { minX: -28, maxX: 28, minZ: -20, maxZ: 20, wallHeight: 3.4 };
-export const WALL = "#f2ead9";
-export const WALL_TOP = "#1e1e1e";
+export const WALL = "#f5f0e8";
+export const WALL_TOP = "#e8e0d0";
 
 /**
  * 3x3 zone grid — rapi, simetris, koridor 7m di antara kolom.
@@ -72,32 +72,32 @@ export const DESK_LAYOUT = (() => {
 })();
 
 export const PALETTE = {
-  ink: 0x1a1c20,
-  wood: 0x2a2520,
-  oak: 0x2d2520,
-  lightWood: 0x3a322a,
-  cream: 0x2a2520,
-  red: 0xb72d38,
-  white: 0x1e1e1e,
-  green: 0x1a3d1f,
-  blue: 0x1a2a3a,
-  gold: 0x3a352a,
-  glass: 0x1a2a3a,
-  water: 0x0a2a3a,
-  leaf: 0x1a3d1f,
-  concrete: 0x222222,
-  darkWood: 0x1a1815,
-  slate: 0x2a2f3a,
-  sofa: 0x3d2a2a,
-  sofaLight: 0x4a3a35,
-  rug: 0x3a2a2a,
-  poolTile: 0x0a2a3a,
-  grass: 0x1a3a1a,
-  carpet: 0x1a1a1a,
-  rubber: 0x1a1e24,
-  curtain: 0x2a2520,
-  skin: 0x2a2520,
-  hair: 0x1a1815
+  ink: 0x3a3530,
+  wood: 0xc8b8a0,
+  oak: 0xd8c8b0,
+  lightWood: 0xe8dcc8,
+  cream: 0xf5f0e8,
+  red: 0xc84840,
+  white: 0xfaf8f4,
+  green: 0x88c878,
+  blue: 0x68a8e8,
+  gold: 0xe8c860,
+  glass: 0xa8d8e8,
+  water: 0x88c8f8,
+  leaf: 0x88d878,
+  concrete: 0xe8e0d8,
+  darkWood: 0x987858,
+  slate: 0xa8a098,
+  sofa: 0xd8b898,
+  sofaLight: 0xe8d0b8,
+  rug: 0xd8b888,
+  poolTile: 0x98d8f8,
+  grass: 0xa8e888,
+  carpet: 0xe0d8d0,
+  rubber: 0xb8b0a8,
+  curtain: 0xf0e8e0,
+  skin: 0xf0d8c0,
+  hair: 0x685038
 };
 
 /* ------------------------------------------------------------------ */
@@ -503,39 +503,39 @@ export class InstancePool {
 
 function buildMaterials() {
   const wood = woodTexture();
-  const woodMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.65, metalness: 0.03, color: 0x2a2520 });
+  const woodMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.55, metalness: 0.04, color: 0xd8c8b0 });
   const carpet = carpetTexture();
-  const carpetMat = new THREE.MeshStandardMaterial({ map: carpet, roughness: 0.98, metalness: 0, color: 0x1a1a1a });
+  const carpetMat = new THREE.MeshStandardMaterial({ map: carpet, roughness: 0.95, metalness: 0, color: 0xe8e0d8 });
   const tile = tileTexture();
-  const tileMat = new THREE.MeshStandardMaterial({ map: tile, roughness: 0.45, metalness: 0.02, color: 0x252525 });
+  const tileMat = new THREE.MeshStandardMaterial({ map: tile, roughness: 0.32, metalness: 0.02, color: 0xf0e8e0 });
   const grass = grassTexture();
-  const grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 0.98, metalness: 0, color: 0x1a3a1a });
+  const grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 0.95, metalness: 0, color: 0xa8e888 });
   const rug = rugTexture();
-  const rugMat = new THREE.MeshStandardMaterial({ map: rug, roughness: 0.95, metalness: 0, color: 0x2d2520 });
+  const rugMat = new THREE.MeshStandardMaterial({ map: rug, roughness: 0.92, metalness: 0, color: 0xd8b888 });
   const prayRug = prayRugTexture();
-  const prayRugMat = new THREE.MeshStandardMaterial({ map: prayRug, roughness: 0.92, metalness: 0, color: 0x3a2a2a });
+  const prayRugMat = new THREE.MeshStandardMaterial({ map: prayRug, roughness: 0.9, metalness: 0, color: 0xc8b8a0 });
   const menu = menuBoardTexture();
-  const menuMat = new THREE.MeshStandardMaterial({ map: menu, roughness: 0.88, metalness: 0, color: 0x2a2520 });
-  const vertexMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.04 });
+  const menuMat = new THREE.MeshStandardMaterial({ map: menu, roughness: 0.85, metalness: 0, color: 0xd8c8b0 });
+  const vertexMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.72, metalness: 0.05 });
   const glassMat = new THREE.MeshStandardMaterial({
-    color: 0x1a2a3a, transparent: true, opacity: 0.18, roughness: 0.05, metalness: 0.08, side: THREE.DoubleSide
+    color: 0xa8d8e8, transparent: true, opacity: 0.26, roughness: 0.08, metalness: 0.1, side: THREE.DoubleSide
   });
-  const metalMat = new THREE.MeshStandardMaterial({ color: 0x3a4048, roughness: 0.4, metalness: 0.8 });
-  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x1e2228, roughness: 0.5, metalness: 0.65 });
-  const fabricMat = new THREE.MeshStandardMaterial({ color: 0x3d2a2a, roughness: 0.98, metalness: 0 });
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0xa8a098, roughness: 0.35, metalness: 0.75 });
+  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x888078, roughness: 0.45, metalness: 0.6 });
+  const fabricMat = new THREE.MeshStandardMaterial({ color: 0xd8b898, roughness: 0.95, metalness: 0 });
   const screenMat = new THREE.MeshStandardMaterial({
-    color: 0x0a1218, emissive: 0x1a3a5a, emissiveIntensity: 0.8, roughness: 0.15, metalness: 0.08
+    color: 0x2a3a4a, emissive: 0x4a8ac8, emissiveIntensity: 0.6, roughness: 0.25, metalness: 0.1
   });
   const ledMat = new THREE.MeshStandardMaterial({
-    color: 0x2a2824, emissive: 0x3a352a, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0
+    color: 0xf5f0e8, emissive: 0xfff2cf, emissiveIntensity: 0.9, roughness: 0.4, metalness: 0
   });
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x1a3d1f, roughness: 0.9, metalness: 0 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x88d878, roughness: 0.85, metalness: 0 });
   const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x0a2a3a, transparent: true, opacity: 0.65, roughness: 0.08, metalness: 0.03
+    color: 0x88c8f8, transparent: true, opacity: 0.72, roughness: 0.12, metalness: 0.05
   });
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.95, metalness: 0 });
-  const concreteMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9, metalness: 0 });
-  const rubberMat = new THREE.MeshStandardMaterial({ color: 0x1a1e24, roughness: 0.98, metalness: 0 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.9, metalness: 0 });
+  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xe8e0d8, roughness: 0.85, metalness: 0 });
+  const rubberMat = new THREE.MeshStandardMaterial({ color: 0xb8b0a8, roughness: 0.95, metalness: 0 });
   return {
     woodMat, carpetMat, tileMat, grassMat, rugMat, prayRugMat, menuMat, vertexMat, glassMat, metalMat,
     darkMetal, fabricMat, screenMat, ledMat, leafMat, waterMat, wallMat, concreteMat, rubberMat

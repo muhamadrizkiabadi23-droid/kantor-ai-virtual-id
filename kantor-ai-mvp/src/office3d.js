@@ -254,11 +254,11 @@ function focusArea(area, keepOffset = true) {
 function setDayNight() {
   nightMode = !nightMode;
   world.setDayNight(nightMode);
-  scene.background.setHex(nightMode ? 0x18283d : 0xbfe9eb);
-  hemi.intensity = nightMode ? 0.5 : 1.15;
+  scene.background.setHex(nightMode ? 0x2a2a2a : 0xf0ece4);
+  hemi.intensity = nightMode ? 0.5 : 1.2;
   if ("environmentIntensity" in scene) scene.environmentIntensity = nightMode ? 0.25 : 1;
-  sun.intensity = nightMode ? 0.55 : 2.2;
-  sun.color.setHex(nightMode ? 0x9bb7ff : 0xfff0cc);
+  sun.intensity = nightMode ? 0.55 : 2.4;
+  sun.color.setHex(nightMode ? 0x9bb7ff : 0xfff5e8);
   nightLights.forEach((light) => { light.visible = nightMode; });
   document.getElementById("office-day-toggle").textContent = nightMode ? "Mode siang" : "Mode malam";
   document.dispatchEvent(new CustomEvent("office-mode-changed", { detail: { night: nightMode, floor: activeFloor } }));
@@ -661,12 +661,12 @@ function initialize() {
     support?.appendChat("hermes", "Konteks WebGL hilang. Muat ulang halaman; laporan otomatis tersedia di tab Laporkan bug.");
   });
 
-  scene.background = new THREE.Color(0x0d0d12);
+  scene.background = new THREE.Color(0xf0ece4);
 
-    hemi = new THREE.HemisphereLight(0x3a3f4a, 0x1a1c20, 0.6);
+    hemi = new THREE.HemisphereLight(0xfff8f0, 0xd8d0c8, 1.2);
     scene.add(hemi);
-    sun = new THREE.DirectionalLight(0xffeedd, 1.8);
-    sun.position.set(-14, 26, 16);
+    sun = new THREE.DirectionalLight(0xfff5e8, 2.4);
+    sun.position.set(-14, 28, 16);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
     sun.shadow.camera.left = -24;
@@ -678,16 +678,16 @@ function initialize() {
     sun.shadow.bias = -0.0006;
     scene.add(sun);
 
-    // Accent fill lights for depth
-    const fill1 = new THREE.DirectionalLight(0x2a2f3a, 0.3);
+    // Accent fill lights for depth (warm)
+    const fill1 = new THREE.DirectionalLight(0xf0e8d8, 0.5);
     fill1.position.set(20, 18, -10);
     scene.add(fill1);
-    const fill2 = new THREE.DirectionalLight(0x1a2535, 0.25);
+    const fill2 = new THREE.DirectionalLight(0xe8e0d8, 0.4);
     fill2.position.set(-20, 18, 10);
     scene.add(fill2);
 
     for (const [x, z] of [[0, -3], [12.75, -3], [-12.75, -3], [0, 5.5]]) {
-      const light = new THREE.PointLight(0xffb84d, 0, 14, 2);
+      const light = new THREE.PointLight(0xfff0d8, 0, 14, 2);
       light.position.set(x, 2.5, z);
       light.visible = false;
       scene.add(light);
@@ -696,7 +696,7 @@ function initialize() {
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(240, 240),
-      new THREE.MeshStandardMaterial({ color: 0x0f0f12, roughness: 1 })
+      new THREE.MeshStandardMaterial({ color: 0xe8e0d8, roughness: 1 })
     );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.55;

@@ -823,27 +823,27 @@ body.login-body {
 .office-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-width: 32px; height: 32px; padding: 0 10px;
-  border-radius: 8px; border: 1px solid rgba(242, 234, 217, .18);
-  background: rgba(10, 12, 16, .88); color: #f2ead9;
+  border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink);
   font-size: 11px; font-weight: 600; font-family: inherit;
   cursor: pointer; pointer-events: auto;
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   transition: background .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
 }
-.office-btn:hover { background: rgba(225, 170, 93, .18); border-color: rgba(225, 170, 93, .4); color: #fff; }
+.office-btn:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
 .office-btn:active { transform: scale(.97); }
-.office-btn.selected { background: rgba(225, 170, 93, .22); border-color: #e1aa5d; color: #e1aa5d; }
-.office-btn[aria-pressed="true"] { background: rgba(225, 170, 93, .22); border-color: #e1aa5d; color: #e1aa5d; }
+.office-btn.selected { background: var(--brand); border-color: var(--brand); color: #fff; }
+.office-btn[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
 
 /* ---- Status Chip ---- */
 .office-status-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 12px; border-radius: 20px;
-  background: rgba(10, 12, 16, .9); border: 1px solid rgba(242, 234, 217, .14);
-  font-size: 11px; font-weight: 600; color: #e1aa5d;
+  background: var(--surface); border: 1px solid var(--line);
+  font-size: 11px; font-weight: 600; color: var(--brand);
   backdrop-filter: blur(6px);
 }
-.office-status-chip i { width: 8px; height: 8px; border-radius: 50%; background: #55c4b5; box-shadow: 0 0 8px #55c4b5; }
+.office-status-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
 
 /* ---- Legend ---- */
 .office-legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; pointer-events: auto; }
@@ -1124,27 +1124,27 @@ body.login-body {
 .office-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-width: 32px; height: 32px; padding: 0 10px;
-  border-radius: 8px; border: 1px solid rgba(242, 234, 217, .14);
-  background: rgba(10, 12, 16, .88); color: #f2ead9;
+  border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink);
   font-size: 11px; font-weight: 600; font-family: inherit;
   cursor: pointer; pointer-events: auto;
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   transition: background .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
 }
-.office-btn:hover { background: rgba(225, 170, 93, .18); border-color: rgba(225, 170, 93, .4); color: #fff; }
+.office-btn:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
 .office-btn:active { transform: scale(.97); }
-.office-btn.selected { background: rgba(225, 170, 93, .22); border-color: #e1aa5d; color: #e1aa5d; }
-.office-btn[aria-pressed="true"] { background: rgba(225, 170, 93, .22); border-color: #e1aa5d; color: #e1aa5d; }
+.office-btn.selected { background: var(--brand); border-color: var(--brand); color: #fff; }
+.office-btn[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
 
 /* --- Status chip --- */
 .office-status-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 12px; border-radius: 20px;
-  background: rgba(10, 12, 16, .9); border: 1px solid rgba(242, 234, 217, .14);
-  font-size: 11px; font-weight: 600; color: #e1aa5d;
+  background: var(--surface); border: 1px solid var(--line);
+  font-size: 11px; font-weight: 600; color: var(--brand);
   backdrop-filter: blur(6px);
 }
-.office-status-chip i { width: 8px; height: 8px; border-radius: 50%; background: #55c4b5; box-shadow: 0 0 8px #55c4b5; }
+.office-status-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
 
 /* --- PIC chip (penanggung jawab tugas aktif) --- */
 .office-pic-chip {
@@ -1276,20 +1276,21 @@ body.login-body {
 .hud-card-input { display: flex; gap: 6px; margin-top: 10px; }
 .hud-card-input input {
   flex: 1; padding: 8px 10px; border-radius: 8px;
-  border: 1px solid rgba(242, 234, 217, .14);
-  background: rgba(0, 0, 0, .3); color: #f2ead9;
+  border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink);
   font-size: 11px; font-family: inherit; outline: none;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
-.hud-card-input input:focus { border-color: #e1aa5d; box-shadow: 0 0 0 3px rgba(225, 170, 93, .12); }
+.hud-card-input input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(183, 40, 58, .12); }
 .hud-card-send {
   padding: 8px 12px; border-radius: 8px; border: none;
-  background: linear-gradient(135deg, #e1aa5d, #b9813c); color: #1a1208;
+  background: var(--brand); color: white;
   font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer;
 }
-.hud-card-history { margin-top: 10px; max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-.hud-card-history-item { font-size: 10px; color: rgba(242, 234, 217, .6); padding: 4px 6px; border-radius: 6px; background: rgba(242, 234, 217, .04); }
-.hud-card-history-item strong { color: #e1aa5d; }
+.hud-card-form { display: flex; gap: 6px; margin-top: 10px; }
+.hud-card-chat { margin-top: 10px; max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.hud-card-chat-item { font-size: 10px; color: var(--muted); padding: 4px 6px; border-radius: 6px; background: var(--line); }
+.hud-card-chat-item strong { color: var(--brand); }
 
 /* --- Task Board --- */
 .task-board {
@@ -1587,3 +1588,12 @@ dialog::backdrop { background: rgba(0, 0, 0, .7); backdrop-filter: blur(4px); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+.live-update-toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  padding: 12px 16px; border-radius: 10px;
+  background: var(--brand); color: white;
+  box-shadow: var(--shadow); cursor: pointer;
+  animation: slideIn .3s ease;
+}
+@keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

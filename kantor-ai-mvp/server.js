@@ -13,6 +13,60 @@ const HOST = isCloud ? "0.0.0.0" : (process.env.HOST || "127.0.0.1");
 console.log(`[env] PORT=${process.env.PORT || "(default)"} HOST=${HOST} RAILWAY_ENV=${process.env.RAILWAY_ENVIRONMENT || "-"} CODESPACES=${process.env.CODESPACES || "-"}`);
 
 /* ------------------------------------------------------------------ */
+/* Live Update (file watcher + SSE)                                   */
+/* ------------------------------------------------------------------ */
+
+const liveClients = new Set();
+let liveVersion = 0;
+
+function computeLiveVersion() {
+  const files = [
+    "index.html",
+    "styles.css",
+    "src/app.js",
+    "src/office3d.js",
+    "src/officeWorld.js",
+    "src/officeAgents.js",
+    "src/officeSupport.js",
+    "src/workflow.js",
+    "login.html",
+    "login.js",
+  ];
+  let hash = 0;
+  for (const f of files) {
+    const p = path.join(ROOT, f);
+    if (fs.existsSync(p)) {
+      const stat = fs.statSync(p);
+      hash ^= stat.mtimeMs;
+      hash ^= stat.size;
+    }
+  }
+  liveVersion = hash >>> 0;
+}
+
+function broadcastLiveUpdate() {
+  const data = `data: ${JSON.stringify({ version: liveVersion, ts: Date.now() })}\n\n`;
+  for (const client of liveClients) {
+    try { client.write(data); } catch { /* ignore */ }
+  }
+}
+
+function startFileWatcher() {
+  const watchDirs = [ROOT, path.join(ROOT, "src")];
+  for (const dir of watchDirs) {
+    fs.watch(dir, { recursive: true }, (eventType, filename) => {
+      if (filename && /\.(js|css|html)$/.test(filename)) {
+        computeLiveVersion();
+        broadcastLiveUpdate();
+        console.log(`[live] file changed: ${filename} -> version ${liveVersion}`);
+      }
+    });
+  }
+  computeLiveVersion();
+  console.log(`[live] watcher started, initial version: ${liveVersion}`);
+}
+
+/* ------------------------------------------------------------------ */
 /* Penyimpanan akun (JSON — cukup untuk prototype)                     */
 /* ------------------------------------------------------------------ */
 
@@ -342,6 +396,20 @@ function createServer(port) {
       return;
     }
 
+    // Live Update SSE endpoint
+    if (pathname === "/api/live" && method === "GET") {
+      response.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no"
+      });
+      response.write(`data: ${JSON.stringify({ version: liveVersion, ts: Date.now() })}\n\n`);
+      liveClients.add(response);
+      request.on("close", () => { liveClients.delete(response); });
+      return;
+    }
+
     if (await handleAuth(request, response, pathname, method)) return;
 
     if (pathname === "/api/agent" && method === "POST") {
@@ -466,6 +534,8 @@ async function startServer(port = PORT) {
     console.log("Mode cloud: bind 0.0.0.0 (port forwarding aktif).");
   }
   console.log(`Kode undangan: ${INVITE_CODE}`);
+  // Start live update file watcher
+  startFileWatcher();
   const hermes = findHermes();
   if (hermes) {
     console.log("AI backend: Hermes Agent CLI aktif (NPC dijawab AI sungguhan).");

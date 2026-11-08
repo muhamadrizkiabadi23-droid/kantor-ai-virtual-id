@@ -1495,4 +1495,40 @@
   const origEmit = emitOfficeState;
   emitOfficeState = function () { origEmit(); syncTopbarStatus(); };
 
+  // --- Live Update Client (SSE) ---
+  let liveClientVersion = 0;
+  function initLiveUpdate() {
+    const evtSource = new EventSource("/api/live");
+    evtSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.version && data.version !== liveClientVersion) {
+          if (liveClientVersion !== 0) {
+            showLiveUpdateToast(data.version);
+          }
+          liveClientVersion = data.version;
+        }
+      } catch (e) { /* ignore parse error */ }
+    };
+    evtSource.onerror = () => {
+      // Reconnect after 5s
+      setTimeout(initLiveUpdate, 5000);
+    };
+  }
+  function showLiveUpdateToast(version) {
+    const toast = document.createElement("div");
+    toast.className = "live-update-toast";
+    toast.innerHTML = `
+      <div class="toast-content">
+        <strong>🔄 Update tersedia (v${version})</strong>
+        <span>Klik untuk refresh halaman</span>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    toast.addEventListener("click", () => { window.location.reload(); });
+    setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 500); }, 10000);
+  }
+  // Start live update after scene ready
+  document.addEventListener("office-scene-ready", initLiveUpdate, { once: true });
+
 })();
