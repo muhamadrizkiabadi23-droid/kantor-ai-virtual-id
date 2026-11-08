@@ -1,383 +1,327 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f5f6f8">
-    <title>Kantor AI Merah Putih — Full Virtual</title>
-    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="./styles.css">
-    <script type="importmap">
-      {"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}
-    </script>
-    <script>
-      // Proteksi dashboard: belum masuk → kembalikan ke halaman login.
-      // Mode demo: kalau backend tidak terjangkau (mis. GitHub Pages), biarkan masuk
-      // dengan profil lokal supaya prototype tetap bisa diuji.
-      (function () {
-        var isApp = location.pathname.startsWith("/app") || location.pathname === "/index.html" || location.pathname.endsWith("/");
-        if (!isApp) return;
-        fetch("./api/auth/me", { credentials: "same-origin" })
-          .then(function (response) {
-            if (!response.ok) {
-              if (response.status === 401 || response.status === 404) location.replace("./login");
-            } else {
-              var userChip = document.getElementById("user-chip");
-              if (userChip) response.json().then(function (data) {
-                userChip.textContent = data.name || "";
-              }).catch(function () { /* biarkan */ });
-            }
-          })
-          .catch(function () { /* backend tidak terjangkau — lanjut mode demo */ });
-      })();
-    </script>
-    <script defer src="./src/workflow.js"></script>
-    <script defer src="./src/app.js"></script>
-    <script type="module" src="./src/office3d.js"></script>
-  </head>
-  <body>
-    <div class="app-shell">
-      <aside class="sidebar" aria-label="Navigasi utama">
-        <a class="brand" href="/" aria-label="Kantor AI Merah Putih, beranda">
-          <span class="brand-mark" aria-hidden="true">MP</span>
-          <span class="brand-copy"><strong>Kantor AI</strong><small>MERAH PUTIH</small></span>
-        </a>
-        <div class="workspace-label">WORKSPACE</div>
-        <nav class="nav-list">
-          <a class="nav-link active" href="#kantor" aria-current="page"><span class="nav-icon" aria-hidden="true">▧</span> Kantor virtual</a>
-          <a class="nav-link" href="#tugas"><span class="nav-icon" aria-hidden="true">▤</span> Tugas <span class="nav-count" id="nav-task-count">0</span></a>
-          <a class="nav-link" href="#klien"><span class="nav-icon" aria-hidden="true">◉</span> Klien</a>
-          <a class="nav-link" href="#integrasi"><span class="nav-icon" aria-hidden="true">⛭</span> Integrasi</a>
-        </nav>
-        <div class="sidebar-bottom">
-          <div class="local-card">
-            <span class="local-dot" aria-hidden="true"></span>
-            <div><strong>Mode preview lokal</strong><small>Data tersimpan di browser ini</small></div>
-          </div>
-          <div class="profile">
-            <span class="avatar">MP</span>
-            <div><strong>Operator</strong><small>Pemilik workspace</small></div>
-            <span class="profile-menu" aria-hidden="true">···</span>
-          </div>
-        </div>
-      </aside>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0c10">
+  <title>KANTOR AI ID — Virtual Workspace</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}
+  </script>
+  <script>
+    // Proteksi dashboard: belum masuk → halaman login.
+    (function () {
+      var isApp = location.pathname.startsWith("/app") || location.pathname === "/index.html" || location.pathname.endsWith("/");
+      if (!isApp) return;
+      fetch("./api/auth/me", { credentials: "same-origin" })
+        .then(function (response) {
+          if (!response.ok && (response.status === 401 || response.status === 404)) location.replace("./login");
+        })
+        .catch(function () { /* backend tidak terjangkau — lanjut mode demo */ });
+    })();
+  </script>
+</head>
+<body>
 
-      <main class="main-content">
-        <header class="topbar">
-          <div class="breadcrumb"><span>Workspace</span><span class="crumb-separator">/</span><strong id="breadcrumb-current">Beranda</strong></div>
-          <div class="topbar-actions">
-            <span class="preview-pill"><span aria-hidden="true"></span> PREVIEW · BELUM TERHUBUNG</span>
-            <span class="user-chip" id="user-chip" title="Akun Anda"></span>
-            <button class="icon-button" id="export-button" type="button" aria-label="Ekspor backup data" title="Ekspor backup data">↓</button>
-            <label class="icon-button import-button" for="import-file" aria-label="Impor backup data" title="Impor backup data">↑</label>
-            <input id="import-file" type="file" accept="application/json,.json" hidden>
-            <button class="icon-button" id="logout-button" type="button" aria-label="Keluar" title="Keluar">⏻</button>
-          </div>
-        </header>
-
-        <section class="page-intro" id="beranda">
-          <div>
-            <p class="eyebrow">SENIN, 07 NOVEMBER 2026 <span class="intro-separator">·</span> WORKSPACE PRIBADI</p>
-            <h1>Selamat datang di kantor AI</h1>
-            <p class="intro-copy">Ringkasan kerja dan persetujuanmu ada di sini.</p>
-          </div>
-          <button class="button button-primary" id="new-task-button" type="button"><span aria-hidden="true">＋</span> Buat tugas</button>
-        </section>
-
-        <section class="notice" role="note" aria-label="Batasan preview">
-          <span class="notice-icon" aria-hidden="true">i</span>
-          <p><strong>Ini prototype lokal.</strong> Draf dibuat dengan template contoh dan disimpan di browser. Belum terhubung ke Telegram, Google Sheets, atau model AI; jangan masukkan data pribadi/rahasia klien.</p>
-          <button class="notice-close" type="button" aria-label="Tutup catatan" id="notice-close">×</button>
-        </section>
-
-        <section class="panel office-panel" id="kantor" aria-labelledby="office-title">
-          <div class="panel-heading">
-            <div><p class="eyebrow office-eyebrow">RUANG KERJA DIGITAL</p><h2 id="office-title">Kantor virtual</h2><p>Status agen mengikuti data tugas nyata — bukan animasi hiasan.</p></div>
-            <span class="office-demo-badge"><span></span> DATA-DRIVEN</span>
-          </div>
-          <div class="office-layout">
-            <div class="office-scene-wrap">
-              <div class="office-scene-toolbar"><span><i></i> Kantor pusat</span><span class="scene-hint" id="office-live-status" role="status" aria-live="polite">Menunggu tugas</span></div>
-              <div id="office-3d" class="office-3d-canvas" role="application" aria-label="Kantor virtual 3D. Seret untuk memutar, klik kanan untuk menggeser, scroll untuk zoom."></div>
-              <div id="office-bubbles" class="office-bubbles" aria-hidden="true"></div>
-              <div class="office-hud office-hud-tl">
-                <div class="office-hud-row">
-                  <button class="office-btn selected" type="button" data-office-floor="1" aria-pressed="true">Lantai 1</button>
-                </div>
-                <div class="office-hud-row">
-                  <button class="office-btn" id="office-view-toggle" type="button">Perspektif</button>
-                  <button class="office-btn" id="office-top-toggle" type="button" title="Tampilan atas — mudah klik NPC">⬇ Atas</button>
-                  <button class="office-btn" id="office-day-toggle" type="button">Mode malam</button>
-                  <button class="office-btn" id="office-bubble-toggle" type="button" title="Tampilkan/sembunyikan gelembung bicara">💬</button>
-                  <button class="office-btn" id="office-sleep-toggle" type="button">💤 Tidur</button>
-                  <button class="office-btn" id="office-tour-toggle" type="button">🎬 Tur</button>
-                  <button class="office-btn" id="office-quality-toggle" type="button" title="Kualitas render: Auto">✨ Auto</button>
-                  <button class="office-btn" id="office-reset" type="button">Reset view</button>
-                  <button class="office-btn" id="office-fullscreen-toggle" type="button" title="Layar penuh">⛶ Full</button>
-                </div>
-              </div>
-              <div class="office-hud office-hud-tr">
-                <div class="office-status-chip" id="office-status-chip"><i></i><span id="office-status-text">Tim siap</span></div>
-              </div>
-              <div class="office-hud office-hud-bl">
-                <div class="office-legend">
-                  <span><i class="lg lg-working"></i>Bekerja</span>
-                  <span><i class="lg lg-thinking"></i>Berpikir</span>
-                  <span><i class="lg lg-meeting"></i>Rapat</span>
-                  <span><i class="lg lg-collab"></i>Kolaborasi</span>
-                  <span><i class="lg lg-resting"></i>Rehat · dekorasi</span>
-                </div>
-              </div>
-              <div class="office-hud office-hud-br" id="office-agent-card" hidden>
-                <div class="hud-card-head">
-                  <span class="hud-card-avatar" id="office-card-avatar">RA</span>
-                  <div class="hud-card-id"><strong id="office-card-name">Raka</strong><small id="office-card-role">Strategi &amp; brand</small></div>
-                  <button class="hud-card-close" id="office-card-close" type="button" aria-label="Tutup detail">×</button>
-                </div>
-                <div class="hud-card-status" id="office-card-status">Menunggu tugas</div>
-                <div class="hud-card-task" id="office-card-task"></div>
-                <div class="hud-card-chat" id="office-card-chat" aria-live="polite"></div>
-                <div class="hud-card-actions" id="office-card-actions">
-                  <button type="button" data-agent-cmd="laporan">Laporan</button>
-                  <button type="button" data-agent-cmd="kerja">Kerjakan tugas</button>
-                  <button type="button" data-agent-cmd="istirahat">Istirahat</button>
-                  <button type="button" data-agent-cmd="rapat">Rapat</button>
-                </div>
-                <form class="hud-card-form" id="office-card-form">
-                  <input type="text" id="office-card-input" placeholder="Perintah ke agen ini…" aria-label="Perintah ke agen terpilih" autocomplete="off">
-                  <button type="submit">Kirim</button>
-                </form>
-              </div>
-
-              <div class="office-hint">Seret: putar · klik kanan / 2 jari: geser · scroll: zoom · PageUp/Down: lantai · R: reset · klik agen: detail</div>
-              <div class="fullscreen-command-bar" id="command-bar">
-                <input type="text" id="command-input" placeholder="Ketik perintah ke tim AI… (misal: 'buat tugas caption untuk Kedai Pagi', 'setujui semua draf', 'laporan')" aria-label="Perintah ke tim AI">
-                <button type="button" id="command-send">Kirim</button>
-                <button type="button" id="command-help" title="Bantuan perintah">?</button>
-              </div>
-              <p id="office-render-error" class="office-render-error" role="status" hidden></p>
-            </div>
-            <div class="office-room-controls" role="group" aria-label="Jelajahi ruang kantor">
-              <button class="office-room-chip" type="button" data-office-area="workspace" data-office-floor="1">Workspace</button>
-              <button class="office-room-chip" type="button" data-office-area="meeting" data-office-floor="1">Ruang rapat</button>
-              <button class="office-room-chip" type="button" data-office-area="masjid" data-office-floor="1">Masjid</button>
-              <button class="office-room-chip" type="button" data-office-area="kopi" data-office-floor="1">Kedai kopi</button>
-              <button class="office-room-chip" type="button" data-office-area="studio" data-office-floor="1">Studio konten</button>
-              <button class="office-room-chip" type="button" data-office-area="client" data-office-floor="1">Ruang klien</button>
-              <button class="office-room-chip" type="button" data-office-area="gym" data-office-floor="1">Gym mini</button>
-              <button class="office-room-chip" type="button" data-office-area="lounge" data-office-floor="1">Lounge</button>
-              <button class="office-room-chip" type="button" data-office-area="pantry" data-office-floor="1">Pantry</button>
-            </div>
-            </div>
-            <aside class="office-agent-card" aria-live="polite">
-              <div class="office-agent-card-top"><span class="office-agent-avatar" id="office-agent-avatar">DE</span><span class="office-agent-presence"><i></i> Preview</span></div>
-              <p class="eyebrow" id="office-area-label">STUDIO KONTEN</p>
-              <h3 id="office-agent-name">Dewi</h3>
-              <p class="office-agent-role" id="office-agent-role">Konten & copywriting</p>
-              <div class="office-agent-divider"></div>
-              <p class="office-agent-description" id="office-agent-description">Mendampingi penyusunan draf konten contoh untuk ditinjau operator.</p>
-              <div class="office-agent-status"><span>Aktivitas</span><strong id="office-agent-status">Menunggu tugas</strong></div>
-              <p class="office-simulation-note">Animasi agen hanya mengikuti status tugas nyata dari workflow. Status <em>dekoratif</em> (rehat) dipisah dari status kerja resmi.</p>
-            </aside>
-          </div>
-        </section>
-
-        <section class="panel ceo-panel" id="ceo" aria-labelledby="ceo-title">
-          <div class="panel-heading">
-            <div><h2 id="ceo-title">Panel CEO</h2><p>Shortcut remote & kontrol cepat — via Telegram, hingga laporan.</p></div>
-            <span class="ceo-badge">👑 Naga Hitam</span>
-          </div>
-          <div class="ceo-grid">
-            <button class="ceo-btn" type="button" data-ceo="telegram" id="ceo-telegram"><span class="ceo-icon telegram-icon">➤</span><span><strong>Remote Telegram</strong><small>Perintah via bot</small></span></button>
-            <button class="ceo-btn" type="button" data-ceo="new-task"><span class="ceo-icon plus-icon">＋</span><span><strong>Tugas Baru</strong><small>Buat brief konten</small></span></button>
-            <button class="ceo-btn" type="button" data-ceo="approve-all"><span class="ceo-icon check-icon">✓</span><span><strong>Setujui Semua</strong><small>Draft menunggu</small></span></button>
-            <button class="ceo-btn" type="button" data-ceo="report"><span class="ceo-icon chart-icon">📊</span><span><strong>Laporan</strong><small>Rekap & statistik</small></span></button>
-            <button class="ceo-btn" type="button" data-ceo="broadcast"><span class="ceo-icon bell-icon">📢</span><span><strong>Broadcast</strong><small>Pesan ke semua agen</small></span></button>
-            <button class="ceo-btn" type="button" data-ceo="night-shift"><span class="ceo-icon moon-icon">🌙</span><span><strong>Shift Malam</strong><small>Mode 24/7</small></span></button>
-          </div>
-        </section>
-
-        <section class="panel social-panel" id="sosmed" aria-labelledby="sosmed-title">
-          <div class="panel-heading">
-            <div><h2 id="sosmed-title">Manajemen Media Sosial</h2><p>Akun konsumen & pendaftaran otomatis oleh karyawan AI.</p></div>
-            <div class="social-actions">
-              <button class="button button-secondary button-small" id="ai-register-btn" type="button" title="AI membuat akun baru">🤖 Daftar via AI</button>
-              <button class="button button-primary button-small" id="add-social-btn" type="button">＋ Tambah Akun</button>
-            </div>
-          </div>
-          <div class="social-table-wrap">
-            <table class="social-table" id="social-table">
-              <thead><tr><th>Konsumen</th><th>Platform</th><th>Username</th><th>Status</th><th>Dibuat oleh</th><th>Aksi</th></tr></thead>
-              <tbody id="social-tbody"></tbody>
-            </table>
-            <div class="empty-state social-empty" id="social-empty" hidden>
-              <div class="empty-icon" aria-hidden="true">📱</div>
-              <h3>Belum ada akun</h3>
-              <p>Tambah akun media sosial konsumen, atau biarkan AI mendaftarkan otomatis.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel divisi-panel" id="divisi" aria-labelledby="divisi-title">
-          <div class="panel-heading">
-            <div><h2 id="divisi-title">Struktur Divisi</h2><p>48 persona AI dalam 9 divisi — 12 inti tampil di kantor 3D.</p></div>
-            <span class="team-total">9 divisi</span>
-          </div>
-          <div class="divisi-grid" id="divisi-grid"></div>
-        </section>
-
-        <section class="metrics" aria-label="Ringkasan tugas">
-          <article class="metric-card">
-            <div class="metric-top"><span>Total tugas</span><span class="metric-icon icon-violet" aria-hidden="true">▤</span></div>
-            <div class="metric-value" id="metric-total">0</div>
-            <div class="metric-foot">Tersimpan di perangkat ini</div>
-          </article>
-          <article class="metric-card">
-            <div class="metric-top"><span>Menunggu review</span><span class="metric-icon icon-amber" aria-hidden="true">◷</span></div>
-            <div class="metric-value" id="metric-review">0</div>
-            <div class="metric-foot">Perlu keputusan operator</div>
-          </article>
-          <article class="metric-card">
-            <div class="metric-top"><span>Disetujui</span><span class="metric-icon icon-green" aria-hidden="true">✓</span></div>
-            <div class="metric-value" id="metric-approved">0</div>
-            <div class="metric-foot">Tidak dipublikasikan otomatis</div>
-          </article>
-          <article class="metric-card">
-            <div class="metric-top"><span>Perlu revisi</span><span class="metric-icon icon-blue" aria-hidden="true">↻</span></div>
-            <div class="metric-value" id="metric-revision">0</div>
-            <div class="metric-foot">Maks. 2 putaran · usulan pilot</div>
-          </article>
-        </section>
-
-        <section class="content-grid">
-          <div class="panel task-panel" id="tugas">
-            <div class="panel-heading">
-              <div><h2>Tugas terbaru</h2><p>Kelola draf dan keputusan dalam satu tempat.</p></div>
-              <button class="text-button" id="view-all-button" type="button">Lihat semua <span aria-hidden="true">→</span></button>
-            </div>
-            <div class="filter-row" role="group" aria-label="Filter tugas">
-              <button class="filter-chip selected" data-filter="all" type="button">Semua</button>
-              <button class="filter-chip" data-filter="review" type="button">Review</button>
-              <button class="filter-chip" data-filter="approved" type="button">Disetujui</button>
-              <button class="filter-chip" data-filter="revision" type="button">Revisi</button>
-            </div>
-            <div class="task-list" id="task-list" aria-live="polite"></div>
-          </div>
-
-          <aside class="side-column">
-            <section class="panel team-panel">
-              <div class="panel-heading compact"><div><h2>Tim inti</h2><p>Persona untuk alur kerja penuh</p></div><span class="team-total">4 peran</span></div>
-              <div class="team-list">
-                <div class="team-row"><span class="team-avatar avatar-strategy">RA</span><span class="team-copy"><strong>Raka</strong><small>Strategi & brand</small></span><span class="team-status status-ready"><i></i> Siap</span></div>
-                <div class="team-row"><span class="team-avatar avatar-content">DE</span><span class="team-copy"><strong>Dewi</strong><small>Konten & copywriting</small></span><span class="team-status status-ready"><i></i> Siap</span></div>
-                <div class="team-row"><span class="team-avatar avatar-client">SA</span><span class="team-copy"><strong>Sari</strong><small>Intake klien</small></span><span class="team-status status-ready"><i></i> Siap</span></div>
-                <div class="team-row"><span class="team-avatar avatar-review">AR</span><span class="team-copy"><strong>Arif</strong><small>Review kualitas</small></span><span class="team-status status-ready"><i></i> Siap</span></div>
-              </div>
-              <div class="team-note">Persona ditampilkan sebagai contoh; belum menjalankan model AI.</div>
-            </section>
-
-            <section class="panel flow-panel">
-              <div class="panel-heading compact"><div><h2>Alur kerja</h2><p>Approval tetap di tanganmu.</p></div></div>
-              <ol class="flow-list">
-                <li class="flow-done"><span>1</span><div><strong>Brief diterima</strong><small>Data minimum diperiksa</small></div></li>
-                <li class="flow-current"><span>2</span><div><strong>Draf disiapkan</strong><small>Belum dikirim ke klien</small></div></li>
-                <li><span>3</span><div><strong>Review operator</strong><small>Setuju atau minta revisi</small></div></li>
-                <li><span>4</span><div><strong>Final</strong><small>Pengiriman manual</small></div></li>
-              </ol>
-            </section>
-          </aside>
-        </section>
-
-        <section class="panel integrations-panel" id="integrasi">
-          <div class="panel-heading">
-            <div><h2>Koneksi & setup</h2><p>Lihat kebutuhan tiap layanan sebelum menghubungkannya.</p></div>
-            <span class="connection-summary"><span></span> Belum ada koneksi aktif</span>
-          </div>
-          <div class="integration-grid">
-            <article class="integration-card">
-              <div class="integration-heading"><span class="integration-icon telegram-icon" aria-hidden="true">➤</span><span class="integration-state">Belum terhubung</span></div>
-              <h3>Telegram Bot</h3><p>Untuk perintah operator, status tugas, dan notifikasi.</p>
-              <button class="setup-link" type="button" data-setup="telegram">Panduan menghubungkan <span aria-hidden="true">→</span></button>
-            </article>
-            <article class="integration-card">
-              <div class="integration-heading"><span class="integration-icon sheets-icon" aria-hidden="true">▦</span><span class="integration-state">Belum terhubung</span></div>
-              <h3>Google Sheets</h3><p>Penyimpanan pilot; akses dan backup wajib dikonfigurasi.</p>
-              <button class="setup-link" type="button" data-setup="sheets">Panduan menghubungkan <span aria-hidden="true">→</span></button>
-            </article>
-            <article class="integration-card">
-              <div class="integration-heading"><span class="integration-icon script-icon" aria-hidden="true">⌘</span><span class="integration-state">Belum terhubung</span></div>
-              <h3>Google Apps Script</h3><p>Webhook/backend untuk menghubungkan bot dengan workflow.</p>
-              <button class="setup-link" type="button" data-setup="apps-script">Panduan menghubungkan <span aria-hidden="true">→</span></button>
-            </article>
-            <article class="integration-card">
-              <div class="integration-heading"><span class="integration-icon ai-icon" aria-hidden="true">✦</span><span class="integration-state">Belum dipilih</span></div>
-              <h3>Provider AI</h3><p>Pilih dan uji satu model/provider sebelum pilot.</p>
-              <button class="setup-link" type="button" data-setup="ai">Panduan menghubungkan <span aria-hidden="true">→</span></button>
-            </article>
-          </div>
-          <p class="integration-footnote"><strong>Keamanan:</strong> tombol ini hanya menampilkan checklist. Jangan tempel token atau API key ke prototype; integrasi nyata perlu backend dan penyimpanan rahasia.</p>
-        </section>
-
-        <footer class="footer-note"><span class="footer-mark" aria-hidden="true">✦</span> Dibuat untuk kerja yang lebih tertata <span class="footer-divider">·</span> Full Virtual v1.0</footer>
-      </main>
+  <!-- ===== TOP BAR (slim) ===== -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="topbar-mark">AI</span>
+      <span class="topbar-copy">
+        <strong>KANTOR AI ID</strong>
+        <small>VIRTUAL WORKSPACE</small>
+      </span>
     </div>
+    <div class="topbar-status">
+      <span class="status-pill"><i></i><span id="topbar-status-text">Tim siap</span></span>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" id="topbar-task-toggle" type="button" title="Papan tugas (B)">📋 Tugas</button>
+      <button class="topbar-btn" id="topbar-ceo-toggle" type="button" title="Panel CEO">👑 CEO</button>
+      <button class="topbar-btn topbar-user" id="topbar-user" type="button" title="Akun">bos</button>
+      <button class="topbar-btn topbar-logout" id="logout-button" type="button" title="Keluar">⻫ Keluar</button>
+    </div>
+  </header>
 
-    <dialog class="task-dialog" id="task-dialog" aria-labelledby="dialog-title">
-      <form id="task-form" method="dialog">
-        <div class="dialog-header"><div><p class="eyebrow">WORKFLOW PENUH · DRAF CONTOH</p><h2 id="dialog-title">Buat tugas konten</h2></div><button class="dialog-close" type="button" id="dialog-close" aria-label="Tutup">×</button></div>
-        <p class="dialog-intro">Lengkapi lima kelompok brief minimum. Preview ini hanya untuk data contoh dan menyimpan data di browser lokal.</p>
-        <div class="form-grid">
-          <p class="form-group-title">1. Identitas usaha & PIC</p>
-          <label class="field"><span>Nama usaha <b>*</b></span><input name="business" required maxlength="80" autocomplete="organization" placeholder="Contoh: Kedai Pagi"></label>
-          <label class="field"><span>Kategori usaha <b>*</b></span><input name="category" required maxlength="80" placeholder="Contoh: Kuliner"></label>
-          <label class="field"><span>Kota/area layanan <b>*</b></span><input name="location" required maxlength="100" placeholder="Contoh: Pekanbaru dan sekitarnya"></label>
-          <label class="field"><span>PIC (gunakan nama contoh) <b>*</b></span><input name="pic" required maxlength="80" placeholder="Contoh: PIC Kedai"></label>
-          <p class="form-group-title">2. Produk/jasa & harga</p>
-          <label class="field"><span>Produk/jasa dan harga <b>*</b></span><input name="product" required maxlength="140" placeholder="Contoh: Kopi susu, Rp18.000"></label>
-          <p class="form-group-title">3. Target pasar</p>
-          <label class="field"><span>Target pasar <b>*</b></span><input name="audience" required maxlength="120" placeholder="Contoh: Pekerja sekitar kedai"></label>
-          <p class="form-group-title">4. Tujuan & tenggat</p>
-          <label class="field"><span>Tujuan dan tenggat <b>*</b></span><input name="goal" required maxlength="160" placeholder="Contoh: Kenalkan menu baru, Jumat"></label>
-          <p class="form-group-title">5. Arah brand & persetujuan</p>
-          <label class="field"><span>Arah brand/tone <b>*</b></span><input name="brandDirection" required maxlength="120" placeholder="Contoh: Santai, ramah"></label>
-          <label class="field"><span>Nama pihak yang menyetujui (contoh) <b>*</b></span><input name="approver" required maxlength="80" placeholder="Contoh: Pemilik usaha"></label>
-          <label class="field full-field"><span>Jenis draf</span><select name="deliverable"><option value="caption">Caption promosi</option><option value="ideas">Ide konten</option></select></label>
+  <!-- ===== STAGE (3D full screen) ===== -->
+  <main class="stage">
+    <div class="office-scene-wrap">
+
+      <div id="office-3d" class="office-3d-canvas" role="application"
+           aria-label="Kantor virtual 3D. Seret untuk memutar, klik kanan untuk menggeser, scroll untuk zoom."></div>
+      <div id="office-bubbles" class="office-bubbles" aria-hidden="true"></div>
+
+      <!-- HUD top-left: view controls -->
+      <div class="office-hud office-hud-tl">
+        <div class="office-hud-row">
+          <button class="office-btn selected" type="button" data-office-floor="1" aria-pressed="true">Lantai 1</button>
         </div>
-        <div class="form-warning"><span aria-hidden="true">!</span> Gunakan data contoh saja. Jangan masukkan nama/kontak asli, password, data pelanggan, atau informasi rahasia. Penggunaan data klien memerlukan persetujuan dan kontrol akses.</div>
-        <div class="dialog-actions"><button class="button button-secondary" type="button" id="cancel-button">Batal</button><button class="button button-primary" type="submit">Buat draf <span aria-hidden="true">→</span></button></div>
-      </form>
-    </dialog>
+        <div class="office-hud-row">
+          <button class="office-btn" id="office-view-toggle" type="button">Perspektif</button>
+          <button class="office-btn" id="office-top-toggle" type="button" title="Tampilan atas — mudah klik NPC (T)">⬇ Atas</button>
+          <button class="office-btn" id="office-day-toggle" type="button" title="Mode siang/malam (D)">Mode malam</button>
+          <button class="office-btn" id="office-tour-toggle" type="button">🎬 Tur</button>
+          <button class="office-btn" id="office-quality-toggle" type="button" title="Kualitas render">✨ Auto</button>
+          <button class="office-btn" id="office-reset" type="button" title="Reset kamera (R)">Reset</button>
+          <button class="office-btn" id="office-fullscreen-toggle" type="button" title="Layar penuh (F)">⛶ Full</button>
+        </div>
+      </div>
 
-    <dialog class="task-dialog detail-dialog" id="detail-dialog" aria-labelledby="detail-title">
-      <div class="dialog-header"><div><p class="eyebrow">TINJAUAN OPERATOR</p><h2 id="detail-title">Draf tugas</h2></div><button class="dialog-close" type="button" id="detail-close" aria-label="Tutup">×</button></div>
+      <!-- HUD top-right: status -->
+      <div class="office-hud office-hud-tr">
+        <div class="office-status-chip" id="office-status-chip">
+          <i></i><span id="office-status-text">Tim siap</span>
+        </div>
+      </div>
+
+      <!-- HUD bottom-left: legend -->
+      <div class="office-hud office-hud-bl">
+        <div class="office-legend">
+          <span><i class="lg lg-working"></i>Bekerja</span>
+          <span><i class="lg lg-thinking"></i>Berpikir</span>
+          <span><i class="lg lg-meeting"></i>Rapat</span>
+          <span><i class="lg lg-collab"></i>Kolaborasi</span>
+          <span><i class="lg lg-resting"></i>Rehat</span>
+        </div>
+      </div>
+
+      <!-- HUD bottom-right: agent card (hidden by default) -->
+      <div class="office-hud office-hud-br" id="office-agent-card" hidden>
+        <div class="hud-card-head">
+          <span class="hud-card-avatar" id="office-card-avatar">RA</span>
+          <div class="hud-card-id">
+            <strong id="office-card-name">Raka</strong>
+            <small id="office-card-role">Strategi &amp; brand</small>
+          </div>
+          <button class="hud-card-close" id="office-card-close" type="button" aria-label="Tutup detail">×</button>
+        </div>
+        <div class="hud-card-body" id="office-card-message">Siap membantu.</div>
+        <div class="hud-card-row">
+          <span>Status</span><span id="office-card-status">Siap</span>
+        </div>
+        <div class="hud-card-actions">
+          <button class="hud-act-primary" data-agent-cmd="laporan" type="button">Laporan</button>
+          <button class="hud-act-secondary" data-agent-cmd="kerja" type="button">Kerjakan tugas</button>
+          <button class="hud-act-secondary" data-agent-cmd="istirahat" type="button">Istirahat</button>
+          <button class="hud-act-danger" data-agent-cmd="rapat" type="button">Rapat</button>
+        </div>
+        <div class="hud-card-input">
+          <input type="text" id="office-card-input" placeholder="Perintah bebas untuk agen ini..." autocomplete="off">
+          <button class="hud-card-send" id="office-card-send" type="button">Kirim</button>
+        </div>
+        <div class="hud-card-history" id="office-card-history"></div>
+      </div>
+
+      <!-- HUD bottom-center: room dock -->
+      <div class="office-hud office-hud-dock" id="office-room-dock" role="navigation" aria-label="Navigasi ruangan">
+        <button class="dock-btn" type="button" data-dock-area="masjid" title="Masjid &amp; Musala"><span class="dock-ico">🕌</span><span class="dock-label">Masjid</span></button>
+        <button class="dock-btn" type="button" data-dock-area="meeting" title="Ruang Rapat"><span class="dock-ico">📊</span><span class="dock-label">Rapat</span></button>
+        <button class="dock-btn" type="button" data-dock-area="kopi" title="Kedai Kopi"><span class="dock-ico">☕</span><span class="dock-label">Kopi</span></button>
+        <button class="dock-btn" type="button" data-dock-area="studio" title="Studio Konten"><span class="dock-ico">🎬</span><span class="dock-label">Studio</span></button>
+        <button class="dock-btn" type="button" data-dock-area="workspace" title="Workspace 48 Meja"><span class="dock-ico">💻</span><span class="dock-label">Workspace</span></button>
+        <button class="dock-btn" type="button" data-dock-area="client" title="Ruang Klien &amp; Review"><span class="dock-ico">🤝</span><span class="dock-label">Klien</span></button>
+        <button class="dock-btn" type="button" data-dock-area="gym" title="Gym Mini"><span class="dock-ico">🏋️</span><span class="dock-label">Gym</span></button>
+        <button class="dock-btn" type="button" data-dock-area="lounge" title="Lounge &amp; Taman"><span class="dock-ico">🌿</span><span class="dock-label">Lounge</span></button>
+        <button class="dock-btn" type="button" data-dock-area="pantry" title="Pantry &amp; Dapur"><span class="dock-ico">🍳</span><span class="dock-label">Pantry</span></button>
+      </div>
+
+      <!-- HUD bottom-center: command bar -->
+      <div class="office-hud office-hud-command" id="command-bar">
+        <input type="text" id="command-input" placeholder="Ketik perintah untuk tim AI..." autocomplete="off">
+        <button class="command-send" id="command-send" type="button">Kirim</button>
+        <button class="command-help" id="command-help" type="button" title="Bantuan (?)">?</button>
+      </div>
+
+      <!-- Scene status (top center) -->
+      <div class="scene-status" id="office-live-status">Menunggu tugas</div>
+    </div>
+  </main>
+
+  <!-- ===== TASK BOARD (slide-in left) ===== -->
+  <aside class="task-board" id="task-board" aria-label="Papan tugas">
+    <div class="task-board-header">
+      <span class="task-board-title">Papan Tugas</span>
+      <button class="task-board-close" id="task-board-close" type="button" aria-label="Tutup">×</button>
+    </div>
+    <div class="task-board-tabs">
+      <button class="task-board-tab active" data-tab="all" type="button">Semua</button>
+      <button class="task-board-tab" data-tab="running" type="button">Berjalan</button>
+      <button class="task-board-tab" data-tab="review" type="button">Review</button>
+      <button class="task-board-tab" data-tab="done" type="button">Selesai</button>
+    </div>
+    <div class="task-board-list" id="task-board-list">
+      <div class="task-item">
+        <div class="task-item-head">
+          <span class="task-item-title">Belum ada tugas</span>
+          <span class="task-item-status task-status-done">Selesai</span>
+        </div>
+        <div class="task-item-meta">
+          <span class="task-item-agent">—</span>
+          <span class="task-item-time">Buat tugas baru</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== CEO PANEL (slide-in right) ===== -->
+  <aside class="ceo-panel" id="ceo-panel" aria-label="Panel CEO">
+    <div class="ceo-panel-header">
+      <span class="ceo-panel-title">Panel CEO</span>
+      <button class="ceo-panel-close" id="ceo-panel-close" type="button" aria-label="Tutup">×</button>
+    </div>
+    <div class="ceo-panel-grid">
+      <button class="ceo-btn" type="button" data-ceo="telegram" id="ceo-telegram">
+        <span class="ceo-icon telegram-icon">➤</span>
+        <span><strong>Remote Telegram</strong><small>Perintah via bot</small></span>
+      </button>
+      <button class="ceo-btn primary" type="button" data-ceo="new-task">
+        <span class="ceo-icon plus-icon">＋</span>
+        <span><strong>Tugas Baru</strong><small>Buat brief konten</small></span>
+      </button>
+      <button class="ceo-btn success" type="button" data-ceo="approve-all">
+        <span class="ceo-icon check-icon">✓</span>
+        <span><strong>Setujui Semua</strong><small>Draft menunggu</small></span>
+      </button>
+      <button class="ceo-btn" type="button" data-ceo="report">
+        <span class="ceo-icon chart-icon">📊</span>
+        <span><strong>Laporan</strong><small>Rekap &amp; statistik</small></span>
+      </button>
+      <button class="ceo-btn" type="button" data-ceo="broadcast">
+        <span class="ceo-icon bell-icon">📢</span>
+        <span><strong>Broadcast</strong><small>Pesan ke semua agen</small></span>
+      </button>
+      <button class="ceo-btn" type="button" data-ceo="night-shift">
+        <span class="ceo-icon moon-icon">🌙</span>
+        <span><strong>Shift Malam</strong><small>Mode 24/7</small></span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== KEYBOARD HINT ===== -->
+  <div class="kbd-hint" id="kbd-hint">
+    <span class="kbd-key"><kbd>1-9</kbd> Ruangan</span>
+    <span class="kbd-key"><kbd>T</kbd> Atas</span>
+    <span class="kbd-key"><kbd>F</kbd> Full</span>
+    <span class="kbd-key"><kbd>B</kbd> Tugas</span>
+    <span class="kbd-key"><kbd>C</kbd> Chat</span>
+    <span class="kbd-key"><kbd>D</kbd> Malam</span>
+    <span class="kbd-key"><kbd>Esc</kbd> Tutup</span>
+  </div>
+
+  <!-- ===== HIDDEN PANELS (kompatibilitas app.js) ===== -->
+  <div class="hidden-panels" hidden>
+    <div id="office-area-label">STUDIO KONTEN</div>
+    <div id="office-agent-avatar">DE</div>
+    <div id="office-agent-name">Dewi</div>
+    <div id="office-agent-role">Konten &amp; copywriting</div>
+    <div id="office-agent-description">Mendampingi penyusunan draf konten contoh untuk ditinjau operator.</div>
+    <div id="office-agent-status">Menunggu tugas</div>
+    <div id="office-area-selected"></div>
+    <button id="new-task-button" type="button">Buat tugas</button>
+    <button id="view-all-button" type="button">Lihat semua</button>
+    <button id="notice-close" type="button">×</button>
+    <button id="export-button" type="button">Ekspor</button>
+    <input type="file" id="import-file" accept="application/json">
+    <div id="task-list"></div>
+    <div id="social-tbody"></div>
+    <div id="social-empty" hidden></div>
+    <table id="social-table"></table>
+    <button id="add-social-btn" type="button">Tambah</button>
+    <button id="ai-register-btn" type="button">AI</button>
+    <div class="filter-chip" data-filter="all">Semua</div>
+    <div class="filter-chip" data-filter="review">Review</div>
+    <div class="filter-chip" data-filter="approved">Disetujui</div>
+    <div class="filter-chip" data-filter="revision">Revisi</div>
+  </div>
+
+  <!-- Dialogs -->
+  <dialog class="task-dialog" id="task-dialog" aria-labelledby="dialog-title">
+    <form id="task-form" method="dialog">
+      <div class="dialog-header">
+        <div><p class="eyebrow">WORKFLOW PENUH · DRAF CONTOH</p><h2 id="dialog-title">Buat tugas konten</h2></div>
+        <button class="dialog-close" type="button" id="dialog-close" aria-label="Tutup">×</button>
+      </div>
+      <p class="dialog-intro">Lengkapi lima kelompok brief minimum. Preview ini hanya untuk data contoh dan menyimpan data di browser lokal.</p>
+      <div class="form-grid">
+        <p class="form-group-title">1. Identitas usaha &amp; PIC</p>
+        <label class="field"><span>Nama usaha <b>*</b></span><input name="business" required maxlength="80" autocomplete="organization" placeholder="Contoh: Kedai Pagi"></label>
+        <label class="field"><span>Kategori usaha <b>*</b></span><input name="category" required maxlength="80" placeholder="Contoh: Kuliner"></label>
+        <label class="field"><span>Kota/area layanan <b>*</b></span><input name="location" required maxlength="100" placeholder="Contoh: Pekanbaru dan sekitarnya"></label>
+        <label class="field"><span>PIC (gunakan nama contoh) <b>*</b></span><input name="pic" required maxlength="80" placeholder="Contoh: PIC Kedai"></label>
+        <p class="form-group-title">2. Produk/jasa &amp; harga</p>
+        <label class="field"><span>Produk/jasa dan harga <b>*</b></span><input name="product" required maxlength="140" placeholder="Contoh: Kopi susu, Rp18.000"></label>
+        <p class="form-group-title">3. Target pasar</p>
+        <label class="field"><span>Target pasar <b>*</b></span><input name="audience" required maxlength="120" placeholder="Contoh: Pekerja sekitar kedai"></label>
+        <p class="form-group-title">4. Tujuan &amp; tenggat</p>
+        <label class="field"><span>Tujuan dan tenggat <b>*</b></span><input name="goal" required maxlength="160" placeholder="Contoh: Kenalkan menu baru, Jumat"></label>
+        <p class="form-group-title">5. Arah brand &amp; persetujuan</p>
+        <label class="field"><span>Arah brand/tone <b>*</b></span><input name="brandDirection" required maxlength="120" placeholder="Contoh: Santai, ramah"></label>
+        <label class="field"><span>Nama pihak yang menyetujui (contoh) <b>*</b></span><input name="approver" required maxlength="80" placeholder="Contoh: Pemilik usaha"></label>
+        <label class="field full-field"><span>Jenis draf</span><select name="deliverable"><option value="caption">Caption promosi</option><option value="ideas">Ide konten</option></select></label>
+      </div>
+      <div class="form-warning"><span aria-hidden="true">!</span> Gunakan data contoh saja. Jangan masukkan nama/kontak asli, password, data pelanggan, atau informasi rahasia.</div>
+      <div class="dialog-actions">
+        <button class="button button-secondary" type="button" id="cancel-button">Batal</button>
+        <button class="button button-primary" type="submit">Buat draf <span aria-hidden="true">→</span></button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="task-dialog detail-dialog" id="detail-dialog" aria-labelledby="detail-title">
+    <form method="dialog">
+      <div class="dialog-header">
+        <div><p class="eyebrow">DETAIL TUGAS</p><h2 id="detail-title">Detail tugas</h2></div>
+        <button class="dialog-close" type="button" id="detail-close" aria-label="Tutup">×</button>
+      </div>
       <div class="detail-meta" id="detail-meta"></div>
-      <div class="draft-box"><div class="draft-label">DRAF CONTOH · PERIKSA SEBELUM DIGUNAKAN</div><div class="draft-text" id="detail-draft"></div></div>
-      <label class="field revision-field" id="revision-field"><span>Catatan revisi <b>*</b></span><textarea id="revision-note" rows="3" maxlength="500" placeholder="Tulis apa yang perlu diperbaiki"></textarea></label>
-      <div class="revision-hint" id="revision-hint"></div>
-      <div class="dialog-actions detail-actions" id="detail-actions"></div>
-    </dialog>
+      <div class="detail-draft" id="detail-draft"></div>
+      <div class="form-group" id="revision-field" hidden>
+        <label class="field"><span>Catatan revisi</span><textarea id="revision-note" rows="3" placeholder="Tuliskan catatan revisi..."></textarea></label>
+        <p class="field-hint" id="revision-hint"></p>
+      </div>
+      <div class="dialog-actions" id="detail-actions"></div>
+    </form>
+  </dialog>
 
-    <dialog class="task-dialog setup-dialog" id="setup-dialog" aria-labelledby="setup-title">
-      <div class="dialog-header"><div><p class="eyebrow">CHECKLIST INTEGRASI</p><h2 id="setup-title">Setup koneksi</h2></div><button class="dialog-close" type="button" id="setup-close" aria-label="Tutup">×</button></div>
+  <dialog class="task-dialog setup-dialog" id="setup-dialog" aria-labelledby="setup-title">
+    <form method="dialog">
+      <div class="dialog-header">
+        <div><p class="eyebrow">PANDUAN SETUP</p><h2 id="setup-title">Panduan</h2></div>
+        <button class="dialog-close" type="button" id="setup-close" aria-label="Tutup">×</button>
+      </div>
       <p class="dialog-intro" id="setup-description"></p>
       <ol class="setup-checklist" id="setup-checklist"></ol>
-      <div class="setup-security" id="setup-security"></div>
-      <div class="dialog-actions"><button class="button button-secondary" type="button" id="setup-dismiss">Tutup</button></div>
-    </dialog>
-
-    <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>
-
-    <div class="approval-toast" id="approval-toast" role="dialog" aria-labelledby="approval-title" hidden>
-      <div class="approval-toast-head">
-        <span class="approval-toast-icon" aria-hidden="true">🔔</span>
-        <div><strong id="approval-title">Draf siap ditinjau</strong><small id="approval-sub">AI Director · QC selesai</small></div>
-        <button class="approval-toast-close" id="approval-close" type="button" aria-label="Tutup notifikasi">×</button>
+      <p class="setup-security" id="setup-security"></p>
+      <div class="dialog-actions">
+        <button class="button button-secondary" type="button" id="setup-dismiss">Tutup</button>
       </div>
-      <p class="approval-toast-body" id="approval-body"></p>
-      <div class="approval-toast-actions">
-        <button class="button button-small button-revise" type="button" data-action="open" id="approval-open">Baca draf</button>
-        <button class="button button-small button-approve" type="button" id="approval-approve">Setujui</button>
-      </div>
+    </form>
+  </dialog>
+
+  <!-- Approval toast -->
+  <div class="approval-toast" id="approval-toast" role="alert" aria-live="assertive">
+    <div class="toast-icon info">💬</div>
+    <div class="toast-content">
+      <div class="toast-title" id="approval-title">Draf siap ditinjau</div>
+      <div class="toast-message" id="approval-body">Draf sudah melewati QC Direktur AI. Keputusan akhir ada di tanganmu.</div>
     </div>
-  </body>
+    <div class="toast-actions">
+      <button class="toast-btn secondary" id="approval-close" type="button">Nanti</button>
+      <button class="toast-btn primary" id="approval-approve" type="button">Setujui</button>
+      <button class="toast-btn secondary" id="approval-open" type="button">Buka</button>
+    </div>
+  </div>
+
+  <!-- Toast region -->
+  <div class="toast-region" id="toast-region" aria-live="polite"></div>
+
+  <script src="./src/workflow.js"></script>
+  <script src="./src/app.js"></script>
+  <script type="module" src="./src/office3d.js"></script>
+</body>
 </html>

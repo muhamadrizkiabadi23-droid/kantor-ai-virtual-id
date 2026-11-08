@@ -639,15 +639,17 @@
   function render() {
     renderDivisi();
     const counts = workflow.summarize(tasks);
-    document.getElementById("metric-total").textContent = counts.total;
-    document.getElementById("metric-review").textContent = counts.review;
-    document.getElementById("metric-approved").textContent = counts.approved;
-    document.getElementById("metric-revision").textContent = counts.revision;
-    document.getElementById("nav-task-count").textContent = counts.total;
+    // Elemen metric lama mungkin tidak ada di layout baru — aman saja.
+    ["metric-total", "metric-review", "metric-approved", "metric-revision", "nav-task-count"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = counts.total;
+    });
 
     const filtered = tasks
       .filter((task) => activeFilter === "all" || task.status === activeFilter)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    if (!taskList) { emitOfficeState(); return; }
 
     if (filtered.length === 0) {
       taskList.innerHTML = `<div class="empty-state"><div class="empty-icon" aria-hidden="true">＋</div><h3>${activeFilter === "all" ? "Belum ada tugas" : "Tidak ada tugas di filter ini"}</h3><p>${activeFilter === "all" ? "Buat satu draf contoh untuk mencoba alur kerja penuh." : "Pilih filter lain atau buat tugas baru."}</p>${activeFilter === "all" ? '<button class="button button-secondary" type="button" data-action="new">Buat tugas pertama</button>' : ""}</div>`;
@@ -739,9 +741,10 @@
       if (active) link.setAttribute("aria-current", "page");
       else link.removeAttribute("aria-current");
     });
-    document.getElementById("breadcrumb-current").textContent = currentPage[0];
+    const breadcrumb = document.getElementById("breadcrumb-current");
+    if (breadcrumb) breadcrumb.textContent = currentPage[0];
 
-    // Mode game: masuk kantor = layar penuh immersive, keluar = kembali ke dashboard
+    // Mode game: masuk kantor = layar penuh immersive
     const inOffice = currentPage[1] === "kantor";
     document.body.classList.toggle("game-mode", inOffice);
     if (inOffice && !document.body.classList.contains("office-fullscreen")) {
@@ -1089,7 +1092,8 @@
   const dateLabel = new Intl.DateTimeFormat("id-ID", {
     weekday: "long", day: "2-digit", month: "long", year: "numeric"
   }).format(new Date()).toLocaleUpperCase("id-ID");
-  document.querySelector(".page-intro .eyebrow").textContent = `${dateLabel} · WORKSPACE PRIBADI`;
+  const pageIntro = document.querySelector(".page-intro .eyebrow");
+  if (pageIntro) pageIntro.textContent = `${dateLabel} · WORKSPACE PRIBADI`;
   updateSideCard("studio");
   updateActiveNav();
 
@@ -1137,11 +1141,212 @@
     }
   });
 
-  // Buka langsung full virtual (kantor) — tanpa dasbor.
-  if (!window.location.hash || window.location.hash === "#beranda") {
-    window.location.replace("#kantor");
-  }
+  // --- Dock Room Navigation (Mina-UI style) ---
+  const dockButtons = document.querySelectorAll("#office-room-dock .dock-btn");
+  dockButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const area = btn.dataset.dockArea;
+      if (!area) return;
+      dockButtons.forEach((b) => b.classList.toggle("active", b === btn));
+      // Langsung fokus kamera ke ruangan (office3d.js mendengarkan event ini)
+      document.dispatchEvent(new CustomEvent("office-area-selected", { detail: { area, floor: 1 } }));
+      const label = btn.querySelector(".dock-label")?.textContent || area;
+      showToast(`Melihat ${label}`);
+    });
+  });
+
+  // --- Task Board Toggle (Bekraz style) ---
+  const taskBoard = document.querySelector(".task-board");
+  const taskBoardToggleBtn = document.createElement("button");
+  taskBoardToggleBtn.className = "office-btn";
+  taskBoardToggleBtn.type = "button";
+  taskBoardToggleBtn.title = "Buka papan tugas (Running / Done / Waiting)";
+  taskBoardToggleBtn.innerHTML = '📋 <span>Tugas</span>';
+  taskBoardToggleBtn.addEventListener("click", () => {
+    if (taskBoard) {
+      taskBoard.classList.toggle("open");
+      taskBoardToggleBtn.classList.toggle("selected", taskBoard.classList.contains("open"));
+    }
+  });
+  const hudTr = document.querySelector(".office-hud-tr");
+  if (hudTr) hudTr.insertBefore(taskBoardToggleBtn, hudTr.firstChild);
+
+  // --- Keyboard Shortcuts (Video Shortcut style) ---
+  document.addEventListener("keydown", (e) => {
+    if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName) || e.target.isContentEditable) return;
+    const key = e.key.toLowerCase();
+    if (key >= "1" && key <= "9") {
+      const areas = ["masjid", "meeting", "kopi", "studio", "workspace", "client", "gym", "lounge", "pantry"];
+      const idx = parseInt(key) - 1;
+      if (areas[idx]) {
+        const btn = document.querySelector(`#office-room-dock [data-dock-area="${areas[idx]}"]`);
+        if (btn) btn.click();
+      }
+      return;
+    }
+    switch (key) {
+      case "f": document.getElementById("office-fullscreen-toggle")?.click(); break;
+      case "t": document.getElementById("office-top-toggle")?.click(); break;
+      case "c": document.getElementById("command-input")?.focus(); break;
+      case "b": taskBoardToggleBtn?.click(); break;
+      case "escape":
+        document.querySelectorAll("dialog[open]").forEach((d) => d.close());
+        document.querySelectorAll(".task-board.open").forEach((b) => b.classList.remove("open"));
+        break;
+      case "d": document.getElementById("office-day-toggle")?.click(); break;
+      case "r": document.getElementById("office-reset")?.click(); break;
+    }
+  });
+
+  // --- Keyboard Hint (bottom-left) ---
+  const kbdHint = document.createElement("div");
+  kbdHint.className = "kbd-hint";
+  kbdHint.innerHTML = `
+    <span class="kbd-key"><kbd>1-9</kbd> Ruangan</span>
+    <span class="kbd-key"><kbd>T</kbd> Top-down</span>
+    <span class="kbd-key"><kbd>F</kbd> Fullscreen</span>
+    <span class="kbd-key"><kbd>B</kbd> Papan Tugas</span>
+    <span class="kbd-key"><kbd>C</kbd> Chat</span>
+    <span class="kbd-key"><kbd>D</kbd> Siang/Malam</span>
+    <span class="kbd-key"><kbd>Esc</kbd> Tutup</span>
+  `;
+  document.body.appendChild(kbdHint);
+  setTimeout(() => { kbdHint.style.opacity = "0"; kbdHint.style.transition = "opacity 1s"; setTimeout(() => kbdHint.remove(), 1000); }, 15000);
 
   render();
   renderSocial();
+
+  // --- Topbar: Task Board toggle ---
+  const topbarTaskBtn = document.getElementById("topbar-task-toggle");
+  const topbarCeoBtn = document.getElementById("topbar-ceo-toggle");
+  const taskBoardEl = document.getElementById("task-board");
+  const ceoPanelEl = document.getElementById("ceo-panel");
+  const taskBoardClose = document.getElementById("task-board-close");
+  const ceoPanelClose = document.getElementById("ceo-panel-close");
+
+  if (topbarTaskBtn && taskBoardEl) {
+    topbarTaskBtn.addEventListener("click", () => {
+      taskBoardEl.classList.toggle("open");
+      topbarTaskBtn.classList.toggle("selected", taskBoardEl.classList.contains("open"));
+      if (taskBoardEl.classList.contains("open") && ceoPanelEl) {
+        ceoPanelEl.classList.remove("open");
+        if (topbarCeoBtn) topbarCeoBtn.classList.remove("selected");
+      }
+    });
+  }
+  if (taskBoardClose && taskBoardEl) {
+    taskBoardClose.addEventListener("click", () => {
+      taskBoardEl.classList.remove("open");
+      if (topbarTaskBtn) topbarTaskBtn.classList.remove("selected");
+    });
+  }
+  if (topbarCeoBtn && ceoPanelEl) {
+    topbarCeoBtn.addEventListener("click", () => {
+      ceoPanelEl.classList.toggle("open");
+      topbarCeoBtn.classList.toggle("selected", ceoPanelEl.classList.contains("open"));
+      if (ceoPanelEl.classList.contains("open") && taskBoardEl) {
+        taskBoardEl.classList.remove("open");
+        if (topbarTaskBtn) topbarTaskBtn.classList.remove("selected");
+      }
+    });
+  }
+  if (ceoPanelClose && ceoPanelEl) {
+    ceoPanelClose.addEventListener("click", () => {
+      ceoPanelEl.classList.remove("open");
+      if (topbarCeoBtn) topbarCeoBtn.classList.remove("selected");
+    });
+  }
+
+  // --- Task board tabs ---
+  document.querySelectorAll(".task-board-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".task-board-tab").forEach((t) => t.classList.toggle("active", t === tab));
+      activeFilter = tab.dataset.tab === "all" ? "all" : tab.dataset.tab;
+      renderTaskBoard();
+    });
+  });
+
+  // --- Task board list (render dari tasks) ---
+  function renderTaskBoard() {
+    const list = document.getElementById("task-board-list");
+    if (!list) return;
+    const counts = workflow.summarize(tasks);
+    const filtered = tasks.filter((task) => {
+      if (activeFilter === "all") return true;
+      if (activeFilter === "running") return task.status === "review" || task.status === "revision";
+      if (activeFilter === "done") return task.status === "approved";
+      return task.status === activeFilter;
+    }).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="task-item">
+        <div class="task-item-head">
+          <span class="task-item-title">Belum ada tugas</span>
+          <span class="task-item-status task-status-done">Selesai</span>
+        </div>
+        <div class="task-item-meta">
+          <span class="task-item-agent">—</span>
+          <span class="task-item-time">Buat tugas baru</span>
+        </div>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map((task) => {
+      const statusLabel = { review: "Review", revision: "Revisi", approved: "Selesai", cancelled: "Batal" }[task.status] || task.status;
+      const statusClass = { review: "task-status-running", revision: "task-status-waiting", approved: "task-status-done", cancelled: "task-status-waiting" }[task.status] || "task-status-done";
+      const progress = task.status === "approved" ? 100 : task.status === "review" ? 60 : task.status === "revision" ? 40 : 20;
+      return `<div class="task-item" data-task-id="${escapeHtml(task.id)}">
+        <div class="task-item-head">
+          <span class="task-item-title">${escapeHtml(task.title)}</span>
+          <span class="task-item-status ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="task-item-meta">
+          <span class="task-item-agent">${escapeHtml(task.business || "—")}</span>
+          <span class="task-item-time">${formatDate(task.createdAt)}</span>
+        </div>
+        <div class="task-item-progress"><div style="width:${progress}%"></div></div>
+        ${task.status === "review" || task.status === "revision" ? `<div class="task-item-actions">
+          <button class="task-act-btn task-act-approve" data-board-action="approve" data-id="${escapeHtml(task.id)}">Setujui</button>
+          <button class="task-act-btn task-act-revise" data-board-action="revise" data-id="${escapeHtml(task.id)}">Revisi</button>
+          <button class="task-act-btn task-act-reject" data-board-action="cancel" data-id="${escapeHtml(task.id)}">Batal</button>
+        </div>` : ""}
+      </div>`;
+    }).join("");
+  }
+
+  // Delegate clicks on task board
+  if (taskBoardEl) {
+    taskBoardEl.addEventListener("click", (event) => {
+      const actionBtn = event.target.closest("[data-board-action]");
+      if (actionBtn) {
+        const { boardAction, id } = actionBtn.dataset;
+        if (boardAction === "approve") updateTask(id, "approve");
+        else if (boardAction === "revise") updateTask(id, "revise", { note: "Revisi dari papan tugas." });
+        else if (boardAction === "cancel") updateTask(id, "cancel");
+        renderTaskBoard();
+        return;
+      }
+      const item = event.target.closest(".task-item");
+      if (item && item.dataset.taskId) {
+        openDetails(item.dataset.taskId);
+      }
+    });
+  }
+
+  // Panggil renderTaskBoard setelah render
+  renderTaskBoard();
+
+  // --- Sinkronkan status topbar ---
+  function syncTopbarStatus() {
+    const el = document.getElementById("topbar-status-text");
+    if (!el) return;
+    const counts = workflow.summarize(tasks);
+    if (activeTaskId) el.textContent = `${activeStage || "proses"} · ${notice || ""}`;
+    else if (counts.review > 0) el.textContent = `${counts.review} menunggu review`;
+    else el.textContent = "Tim siap";
+  }
+  const origEmit = emitOfficeState;
+  emitOfficeState = function () { origEmit(); syncTopbarStatus(); };
+
 })();

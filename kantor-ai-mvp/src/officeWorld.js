@@ -1389,5 +1389,11 @@ export function createWorld(scene) {
 
   world.setDayNight = (night) => applyDayNight(world, night);
   world.update = (dt) => updateWorld(world, dt);
+
+  // Isi target kamera per ruangan dari data ZONES (dipakai dock navigasi).
+  for (const [area, zone] of Object.entries(ZONES[1])) {
+    world.roomTargets.set(area, new THREE.Vector3(zone.cx, FLOOR_Y[1] + 1.4, zone.cz));
+  }
+
   return world;
 }

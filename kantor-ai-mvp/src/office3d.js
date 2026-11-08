@@ -51,6 +51,11 @@ let sleepMode = false;
 let tourMode = false;
 let tourAngle = 0;
 let quality = "auto";
+// Override lewat URL: ?quality=low|auto|high (berguna untuk HP lambat / audit).
+try {
+  const q = new URLSearchParams(location.search).get("quality");
+  if (q && ["low", "auto", "high"].includes(q)) quality = q;
+} catch (e) { /* abaikan */ }
 let fpsLowTime = 0;
 let selectedArea = "strategy";
 let selectedAgentId = null;
@@ -120,7 +125,10 @@ function resize() {
   if (camera.isPerspectiveCamera) {
     camera.aspect = aspect;
   } else {
-    const halfHeight = 13.5;
+    // Samakan dengan setupCamera(): frustum menutup seluruh gedung + margin.
+    const halfW = (BUILDING.maxX - BUILDING.minX) / 2 + 2;
+    const halfD = (BUILDING.maxZ - BUILDING.minZ) / 2 + 2;
+    const halfHeight = Math.max(halfD, halfW / aspect);
     camera.left = -halfHeight * aspect;
     camera.right = halfHeight * aspect;
     camera.top = halfHeight;
@@ -187,7 +195,8 @@ function toggleSleep() {
   document.dispatchEvent(new CustomEvent("office-sleep-request", { detail: { sleep: sleepMode } }));
   // Satu lantai: mode tidur = malam hari (lampu redup) alih-alih pindah lantai.
   world.setDayNight(sleepMode);
-  document.getElementById("office-sleep-toggle").textContent = sleepMode ? "☀ Bangunkan tim" : "💤 Tidur";
+  const btn = document.getElementById("office-sleep-toggle");
+  if (btn) btn.textContent = sleepMode ? "☀ Bangunkan tim" : "💤 Tidur";
 }
 
 let topView = false;
@@ -307,11 +316,16 @@ function selectAgent(agentId) {
 
 function refreshAgentCard(agent) {
   if (!agent || agentCard.hidden) return;
-  document.getElementById("office-card-avatar").textContent = agent.def.initials || String(agent.def.name || "?").slice(0, 2).toUpperCase();
-  document.getElementById("office-card-name").textContent = agent.def.name || "Agen";
-  document.getElementById("office-card-role").textContent = agent.def.role || "";
-  document.getElementById("office-card-status").textContent = statusLabel(agent.def.status);
-  document.getElementById("office-card-task").textContent = agent.def.taskTitle ? `Tugas: ${agent.def.taskTitle}` : "Tidak ada tugas aktif";
+  const avatar = document.getElementById("office-card-avatar");
+  const name = document.getElementById("office-card-name");
+  const role = document.getElementById("office-card-role");
+  const status = document.getElementById("office-card-status");
+  const task = document.getElementById("office-card-task");
+  if (avatar) avatar.textContent = agent.def.initials || String(agent.def.name || "?").slice(0, 2).toUpperCase();
+  if (name) name.textContent = agent.def.name || "Agen";
+  if (role) role.textContent = agent.def.role || "";
+  if (status) status.textContent = statusLabel(agent.def.status);
+  if (task) task.textContent = agent.def.taskTitle ? `Tugas: ${agent.def.taskTitle}` : "Tidak ada tugas aktif";
 }
 
 function updateStatus(snapshot) {
@@ -443,16 +457,17 @@ function animate() {
 
 function wireControls() {
   floorButtons.forEach((button) => button.addEventListener("click", () => setFloor(Number(button.dataset.officeFloor))));
-  document.getElementById("office-view-toggle").addEventListener("click", switchView);
-  document.getElementById("office-day-toggle").addEventListener("click", setDayNight);
-  document.getElementById("office-sleep-toggle").addEventListener("click", toggleSleep);
-  document.getElementById("office-top-toggle").addEventListener("click", toggleTopView);
-  document.getElementById("office-bubble-toggle").addEventListener("click", toggleBubbles);
-  document.getElementById("office-tour-toggle").addEventListener("click", toggleTour);
-  document.getElementById("office-quality-toggle").addEventListener("click", toggleQuality);
-  document.getElementById("office-fullscreen-toggle").addEventListener("click", toggleFullscreen);
-  document.getElementById("office-reset").addEventListener("click", resetCamera);
-  document.getElementById("office-card-close").addEventListener("click", () => {
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
+  on("office-view-toggle", switchView);
+  on("office-day-toggle", setDayNight);
+  on("office-sleep-toggle", toggleSleep);
+  on("office-top-toggle", toggleTopView);
+  on("office-bubble-toggle", toggleBubbles);
+  on("office-tour-toggle", toggleTour);
+  on("office-quality-toggle", toggleQuality);
+  on("office-fullscreen-toggle", toggleFullscreen);
+  on("office-reset", resetCamera);
+  on("office-card-close", () => {
     agentCard.hidden = true;
     selectedAgentId = null;
     agentSystem.select(null);
@@ -570,6 +585,15 @@ function initialize() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
+  // Deteksi software renderer (SwiftShader/llvmpipe/Microsoft Basic) → paksa hemat.
+  try {
+    const gl = renderer.getContext();
+    const ext = gl.getExtension("WEBGL_debug_renderer_info");
+    const rname = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "";
+    if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(String(rname))) {
+      quality = "low";
+    }
+  } catch (e) { /* abaikan */ }
   mount.prepend(renderer.domElement);
   renderer.domElement.addEventListener("webglcontextlost", (event) => {
     event.preventDefault();

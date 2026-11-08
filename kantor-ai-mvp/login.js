@@ -1,33 +1,36 @@
-/* login.js — daftar & masuk prototype Kantor AI Virtual ID */
+/* login.js — masuk & daftar prototype Kantor AI Virtual ID */
 (function () {
   "use strict";
 
-  const title = document.getElementById("login-title");
-  const subtitle = document.getElementById("login-sub");
-  const switchButton = document.getElementById("switch-button");
-  const switchText = document.getElementById("switch-text");
-  const form = document.getElementById("login-form");
-  const inviteField = document.getElementById("invite-field");
-  const submitButton = document.getElementById("login-submit");
-  const errorBox = document.getElementById("login-error");
-  const nameInput = document.getElementById("login-name");
-  const passwordInput = document.getElementById("login-password");
-  const inviteInput = document.getElementById("register-invite");
-  const forgotButton = document.getElementById("forgot-button");
+  var title = document.getElementById("login-title");
+  var subtitle = document.getElementById("login-sub");
+  var switchButton = document.getElementById("switch-button");
+  var switchText = document.getElementById("switch-text");
+  var form = document.getElementById("login-form");
+  var inviteField = document.getElementById("invite-field");
+  var submitButton = document.getElementById("login-submit");
+  var submitLabel = submitButton.querySelector(".submit-label");
+  var submitSpinner = submitButton.querySelector(".submit-spinner");
+  var errorBox = document.getElementById("login-error");
+  var nameInput = document.getElementById("login-name");
+  var passwordInput = document.getElementById("login-password");
+  var inviteInput = document.getElementById("register-invite");
+  var forgotButton = document.getElementById("forgot-button");
+  var card = document.getElementById("loginCard");
 
-  let mode = "login";
+  var mode = "login";
 
   function applyMode() {
-    const isRegister = mode === "register";
-    title.textContent = isRegister ? "Sign Up" : "Welcome";
+    var isRegister = mode === "register";
+    title.textContent = isRegister ? "Daftar Akun" : "Selamat Datang";
     subtitle.textContent = isRegister
-      ? "Create an account to get started"
-      : "Sign in to get started";
+      ? "Buat akun untuk mulai memakai tim AI"
+      : "Masuk untuk mengelola tim AI Anda";
     inviteField.hidden = !isRegister;
-    submitButton.textContent = isRegister ? "Create Account" : "Sign In";
+    submitLabel.textContent = isRegister ? "Buat Akun" : "Masuk";
     submitButton.classList.toggle("is-register", isRegister);
     switchText.textContent = isRegister ? "Sudah punya akun?" : "Belum punya akun?";
-    switchButton.textContent = isRegister ? "Sign In" : "Sign Up";
+    switchButton.textContent = isRegister ? "Masuk" : "Daftar";
     forgotButton.style.display = isRegister ? "none" : "";
     hideError();
   }
@@ -35,50 +38,59 @@
   function showError(message) {
     errorBox.textContent = message;
     errorBox.hidden = false;
+    errorBox.classList.remove("is-visible");
+    // picu ulang animasi
+    void errorBox.offsetWidth;
+    errorBox.classList.add("is-visible");
+    card.classList.remove("is-shake");
+    void card.offsetWidth;
+    card.classList.add("is-shake");
   }
 
   function hideError() {
     errorBox.textContent = "";
     errorBox.hidden = true;
+    errorBox.classList.remove("is-visible");
+  }
+
+  function setLoading(isLoading) {
+    submitButton.disabled = isLoading;
+    submitSpinner.hidden = !isLoading;
+    submitLabel.textContent = isLoading
+      ? (mode === "register" ? "Membuat akun..." : "Memeriksa...")
+      : (mode === "register" ? "Buat Akun" : "Masuk");
   }
 
   async function postJson(pathname, payload) {
-    const response = await fetch(pathname, {
+    var response = await fetch(pathname, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    let data = {};
+    var data = {};
     try {
       data = await response.json();
-    } catch {
+    } catch (e) {
       data = {};
     }
-    return { ok: response.ok, status: response.status, data };
+    return { ok: response.ok, status: response.status, data: data };
   }
 
-  switchButton.addEventListener("click", () => {
+  switchButton.addEventListener("click", function () {
     mode = mode === "login" ? "register" : "login";
     applyMode();
   });
 
-  forgotButton.addEventListener("click", () => {
+  forgotButton.addEventListener("click", function () {
     showError("Fase prototype: minta sandi baru ke pemilik via WhatsApp.");
   });
 
-  document.querySelectorAll(".social-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const social = button.getAttribute("data-social");
-      showError(`Masuk lewat ${social} tersedia setelah integrasi. Daftar pakai nama + sandi dulu.`);
-    });
-  });
-
-  form.addEventListener("submit", async (event) => {
+  form.addEventListener("submit", async function (event) {
     event.preventDefault();
     hideError();
 
-    const name = nameInput.value.trim();
-    const password = passwordInput.value;
+    var name = nameInput.value.trim();
+    var password = passwordInput.value;
     if (name.length < 3) {
       showError("Nama minimal 3 huruf.");
       return;
@@ -88,55 +100,68 @@
       return;
     }
 
-    submitButton.disabled = true;
-    submitButton.textContent = mode === "register" ? "Membuat akun..." : "Memeriksa...";
+    setLoading(true);
 
     try {
       if (mode === "register") {
-        const result = await postJson("/api/auth/register", {
-          name,
-          password,
+        var result = await postJson("./api/auth/register", {
+          name: name,
+          password: password,
           inviteCode: inviteInput.value.trim()
         });
         if (!result.ok) {
           showError(result.data.error || "Pendaftaran gagal.");
-          submitButton.disabled = false;
-          applyMode();
+          setLoading(false);
           return;
         }
-        const loginResult = await postJson("/api/auth/login", { name, password });
+        var loginResult = await postJson("./api/auth/login", { name: name, password: password });
         if (!loginResult.ok) {
-          showError("Akun dibuat, tapi gagal masuk otomatis. Klik Sign In.");
-          submitButton.disabled = false;
+          showError("Akun dibuat, tapi gagal masuk otomatis. Klik Masuk.");
+          setLoading(false);
           mode = "login";
           applyMode();
           return;
         }
       } else {
-        const result = await postJson("/api/auth/login", { name, password });
-        if (!result.ok) {
-          showError(result.data.error || "Gagal masuk.");
-          submitButton.disabled = false;
-          applyMode();
+        var loginOnly = await postJson("./api/auth/login", { name: name, password: password });
+        if (!loginOnly.ok) {
+          showError(loginOnly.data.error || "Gagal masuk.");
+          setLoading(false);
           return;
         }
       }
 
-      window.localStorage.setItem("kantor.user", JSON.stringify({ name }));
-      window.location.href = "/app";
+      try {
+        window.localStorage.setItem("kantor.user", JSON.stringify({ name: name }));
+      } catch (e) { /* abaikan */ }
+      window.location.href = "./app";
     } catch (error) {
       showError("Tidak bisa terhubung ke server. Cek internet Anda.");
-      submitButton.disabled = false;
-      applyMode();
+      setLoading(false);
     }
   });
 
   // Sudah masuk? Langsung ke dashboard.
-  fetch("/api/auth/me", { credentials: "same-origin" })
-    .then((response) => {
-      if (response.ok) window.location.href = "/app";
+  fetch("./api/auth/me", { credentials: "same-origin" })
+    .then(function (response) {
+      if (response.ok) window.location.href = "./app";
     })
-    .catch(() => { /* biarkan di halaman login */ });
+    .catch(function () { /* biarkan di halaman login */ });
+
+  // Animasi tilt kartu mengikuti kursor (ringan, GPU only)
+  if (card && window.matchMedia("(pointer: fine)").matches) {
+    var stage = document.querySelector(".login-stage");
+    stage.addEventListener("mousemove", function (event) {
+      var rect = card.getBoundingClientRect();
+      var dx = (event.clientX - (rect.left + rect.width / 2)) / rect.width;
+      var dy = (event.clientY - (rect.top + rect.height / 2)) / rect.height;
+      card.style.transform =
+        "perspective(1200px) rotateY(" + (dx * 5).toFixed(2) + "deg) rotateX(" + (-dy * 5).toFixed(2) + "deg)";
+    });
+    stage.addEventListener("mouseleave", function () {
+      card.style.transform = "";
+    });
+  }
 
   applyMode();
 })();

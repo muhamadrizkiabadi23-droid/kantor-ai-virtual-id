@@ -1,9 +1,9 @@
 @echo off
-title Kantor AI Merah Putih - MVP
+title KANTOR AI ID - Full Virtual
 cd /d "%~dp0"
 
 echo ================================================
-echo   KANTOR AI MERAH PUTIH - MVP Preview
+echo   KANTOR AI ID - Full Virtual
 echo ================================================
 echo.
 

@@ -4,7 +4,7 @@ title Kantor AI - Penjaga Publik (otomatis nyala)
 cd /d "%~dp0"
 
 echo ================================================
-echo   PENJAGA PUBLIK - Kantor AI Merah Putih
+echo   PENJAGA PUBLIK - KANTOR AI ID
 echo   Server + tunnel otomatis nyala & restart.
 echo ================================================
 echo.

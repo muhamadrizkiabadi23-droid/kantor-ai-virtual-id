@@ -3,7 +3,7 @@ title Kantor AI - Penjaga Server
 cd /d "%~dp0"
 
 echo ================================================
-echo   PENJAGA SERVER - Kantor AI Merah Putih
+echo   PENJAGA SERVER - KANTOR AI ID
 echo   Server otomatis restart bila berhenti.
 echo ================================================
 echo.

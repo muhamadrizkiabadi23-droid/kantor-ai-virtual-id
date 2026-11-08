@@ -4,7 +4,7 @@ title Kantor AI - MODE LAN (bisa dibuka dari HP)
 cd /d "%~dp0"
 
 echo ================================================
-echo   KANTOR AI MERAH PUTIH - MODE LAN
+echo   KANTOR AI ID - MODE LAN
 echo   Bisa dibuka dari HP selama diperhatikan.
 echo ================================================
 echo.

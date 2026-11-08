@@ -4,7 +4,7 @@ title Kantor AI - MODE PUBLIK (HP dari jaringan mana pun)
 cd /d "%~dp0"
 
 echo ================================================
-echo   KANTOR AI MERAH PUTIH - MODE PUBLIK
+echo   KANTOR AI ID - MODE PUBLIK
 echo   URL bisa dibuka di HP lewat data/WiFi apa pun.
 echo ================================================
 echo.
