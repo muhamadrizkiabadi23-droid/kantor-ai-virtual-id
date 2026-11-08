@@ -382,6 +382,26 @@ function createServer(port) {
       }
     }
 
+    // Aset Three.js lokal (dipakai saat deploy statis / GitHub Pages)
+    if (!entry && pathname.startsWith("/vendor/") && method === "GET") {
+      const rel = pathname.replace(/^\/vendor\//, "");
+      const vendorPath = path.join(ROOT, "vendor", rel);
+      if (fs.existsSync(vendorPath) && fs.statSync(vendorPath).isFile()) {
+        const ext = path.extname(vendorPath).toLowerCase();
+        const type = ext === ".js" ? "text/javascript; charset=utf-8"
+          : ext === ".css" ? "text/css; charset=utf-8"
+          : "application/octet-stream";
+        response.writeHead(200, {
+          "Content-Type": type,
+          "X-Content-Type-Options": "nosniff",
+          "Referrer-Policy": "no-referrer",
+          "Cache-Control": "no-store"
+        });
+        response.end(fs.readFileSync(vendorPath));
+        return;
+      }
+    }
+
     if (!entry || method !== "GET") {
       response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
       response.end("Not found");
