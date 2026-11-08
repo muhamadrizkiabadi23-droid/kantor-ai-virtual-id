@@ -4,65 +4,62 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 
 /**
  * officeWorld.js — KANTOR AI ID.
- * SATU LANTAI luas, tata letak rapi 3x3, fasilitas lengkap & estetik:
- * masjid, kedai kopi, studio, ruang rapat, gym, lounge, pantry, workspace 48 meja.
- * Material PBR ringan + instanced mesh + merged geometry untuk performa.
+ * Modern Western office: open plan, glass partitions per division, biophilic design.
+ * Lightweight: instanced meshes + merged geometry + shared materials.
+ *
+ * Layout 3x3 (±30 x ±22 m): musala, meeting, coffee bar / studio, open workspace,
+ * client lounge / gym, lounge & garden, pantry. Koridor 3-5 m di antara zona.
  */
 
 export const FLOOR_Y = { 1: 0 };
-export const BUILDING = { minX: -28, maxX: 28, minZ: -20, maxZ: 20, wallHeight: 3.4 };
-export const WALL = "#f5f0e8";
-export const WALL_TOP = "#e8e0d0";
+export const BUILDING = { minX: -30, maxX: 30, minZ: -22, maxZ: 22, wallHeight: 3.6 };
+export const WALL = "#f8f6f2";
+export const WALL_TOP = "#e8e4dc";
 
-/**
- * 3x3 zone grid — rapi, simetris, koridor 7m di antara kolom.
- */
 export const ZONES = {
   1: {
-    masjid: { label: "Masjid & Musala", cx: -21, cz: -13, w: 14, d: 12 },
-    meeting: { label: "Ruang Rapat", cx: 0, cz: -13, w: 14, d: 12 },
-    kopi: { label: "Kedai Kopi", cx: 21, cz: -13, w: 14, d: 12 },
-    studio: { label: "Studio Konten", cx: -21, cz: 0, w: 14, d: 14 },
-    workspace: { label: "Workspace 48 Meja", cx: 0, cz: 0, w: 14, d: 14 },
-    client: { label: "Ruang Klien & Review", cx: 21, cz: 0, w: 14, d: 14 },
-    gym: { label: "Gym Mini", cx: -21, cz: 13, w: 14, d: 12 },
-    lounge: { label: "Lounge & Taman", cx: 0, cz: 13, w: 14, d: 12 },
-    pantry: { label: "Pantry & Dapur", cx: 21, cz: 13, w: 14, d: 12 }
+    masjid: { label: "Musala", cx: -21, cz: -14, w: 16, d: 8 },
+    meeting: { label: "Meeting Room", cx: 0, cz: -14, w: 16, d: 8 },
+    kopi: { label: "Coffee Bar", cx: 21, cz: -14, w: 16, d: 8 },
+    studio: { label: "Content Studio", cx: -21, cz: 0, w: 16, d: 14 },
+    workspace: { label: "Open Workspace", cx: 0, cz: 0, w: 16, d: 14 },
+    client: { label: "Client Lounge", cx: 21, cz: 0, w: 16, d: 14 },
+    gym: { label: "Fitness Center", cx: -21, cz: 14, w: 16, d: 8 },
+    lounge: { label: "Lounge & Garden", cx: 0, cz: 14, w: 16, d: 8 },
+    pantry: { label: "Pantry & Kitchen", cx: 21, cz: 14, w: 16, d: 8 }
   }
 };
 
 export const AGENT_HOMES = {
-  naga: { area: "meeting", x: 0, z: -13 },
-  arif: { area: "client", x: 21, z: 1.4 },
-  raka: { area: "workspace", x: -2.6, z: -3.6 },
-  kirana: { area: "meeting", x: 3, z: -13 },
-  nadia: { area: "studio", x: -21, z: -4 },
-  dimas: { area: "studio", x: -18, z: -4 },
-  bima: { area: "workspace", x: -4.4, z: -3.6 },
-  dewi: { area: "studio", x: -24, z: -4 },
-  gilang: { area: "client", x: 21, z: 5 },
-  yoga: { area: "client", x: 18, z: 5 },
-  bayu: { area: "client", x: 24, z: 5 },
-  sari: { area: "client", x: 21, z: 4 }
+  naga: { area: "meeting", x: 0, z: -14 },
+  arif: { area: "client", x: 21, z: 0 },
+  raka: { area: "workspace", x: -2, z: -2 },
+  kirana: { area: "meeting", x: -3, z: -14 },
+  nadia: { area: "studio", x: -21, z: -2 },
+  dimas: { area: "studio", x: -18, z: -2 },
+  bima: { area: "workspace", x: -4, z: -2 },
+  dewi: { area: "studio", x: -24, z: -2 },
+  gilang: { area: "client", x: 21, z: 4 },
+  yoga: { area: "client", x: 18, z: 4 },
+  bayu: { area: "client", x: 24, z: 4 },
+  sari: { area: "client", x: 21, z: 2 }
 };
 
-/**
- * 48 workstation: 4 blok x 12 meja (4 kolom x 3 baris) di workspace.
- */
+/** 48 workstation — 4 cluster bench desk (4 kolom x 3 baris). */
 export const DESK_LAYOUT = (() => {
   const desks = [];
   const blocks = [
-    { cx: -3.5, cz: -3.5 },
-    { cx: 3.5, cz: -3.5 },
-    { cx: -3.5, cz: 3.5 },
-    { cx: 3.5, cz: 3.5 }
+    { cx: -4, cz: -3.5 },
+    { cx: 4, cz: -3.5 },
+    { cx: -4, cz: 3.5 },
+    { cx: 4, cz: 3.5 }
   ];
   for (const b of blocks) {
     for (let row = 0; row < 3; row += 1) {
       for (let col = 0; col < 4; col += 1) {
         desks.push({
-          x: b.cx - 2.7 + col * 1.8,
-          z: b.cz - 2 + row * 2,
+          x: b.cx - 3.0 + col * 2.0,
+          z: b.cz - 2.2 + row * 2.2,
           kind: "desk"
         });
       }
@@ -72,36 +69,36 @@ export const DESK_LAYOUT = (() => {
 })();
 
 export const PALETTE = {
-  ink: 0x3a3530,
-  wood: 0xc8b8a0,
-  oak: 0xd8c8b0,
-  lightWood: 0xe8dcc8,
-  cream: 0xf5f0e8,
-  red: 0xc84840,
-  white: 0xfaf8f4,
-  green: 0x88c878,
-  blue: 0x68a8e8,
-  gold: 0xe8c860,
-  glass: 0xa8d8e8,
-  water: 0x88c8f8,
-  leaf: 0x88d878,
-  concrete: 0xe8e0d8,
-  darkWood: 0x987858,
-  slate: 0xa8a098,
-  sofa: 0xd8b898,
-  sofaLight: 0xe8d0b8,
-  rug: 0xd8b888,
-  poolTile: 0x98d8f8,
-  grass: 0xa8e888,
-  carpet: 0xe0d8d0,
-  rubber: 0xb8b0a8,
-  curtain: 0xf0e8e0,
+  ink: 0x2d2d2d,
+  wood: 0xe8ddd0,
+  oak: 0xf0e6d8,
+  lightWood: 0xf5efe6,
+  cream: 0xfaf8f4,
+  red: 0xe05a4e,
+  white: 0xffffff,
+  green: 0x7ec87e,
+  blue: 0x5a9fd4,
+  gold: 0xf0c860,
+  glass: 0xc8e8f0,
+  water: 0x88c8f0,
+  leaf: 0x6ec86e,
+  concrete: 0xf0ece4,
+  darkWood: 0x8a7a68,
+  slate: 0x9a9a9a,
+  sofa: 0xd4c8b8,
+  sofaLight: 0xe4d8c8,
+  rug: 0xd8c8a8,
+  poolTile: 0x98d8f0,
+  grass: 0x98d878,
+  carpet: 0xf0ece4,
+  rubber: 0xc8c0b8,
+  curtain: 0xf8f4ec,
   skin: 0xf0d8c0,
-  hair: 0x685038
+  hair: 0x4a3828
 };
 
 /* ------------------------------------------------------------------ */
-/* Helper geometri & tekstur                                           */
+/* Helper geometri                                                     */
 /* ------------------------------------------------------------------ */
 
 const geoCache = new Map();
@@ -175,6 +172,10 @@ function mergeParts(parts) {
   return mergeGeometries(valid, false);
 }
 
+/* ------------------------------------------------------------------ */
+/* Tekstur prosedural                                                  */
+/* ------------------------------------------------------------------ */
+
 function makeCanvas(size, draw) {
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -194,53 +195,44 @@ function woodTexture() {
     const rows = 8;
     const plank = s / rows;
     for (let row = 0; row < rows; row += 1) {
-      const shade = 168 + Math.floor(Math.random() * 46);
-      ctx.fillStyle = `rgb(${shade}, ${Math.floor(shade * 0.7)}, ${Math.floor(shade * 0.46)})`;
+      const shade = 222 + Math.floor(Math.random() * 26);
+      ctx.fillStyle = `rgb(${shade}, ${Math.floor(shade * 0.88)}, ${Math.floor(shade * 0.72)})`;
       ctx.fillRect(0, row * plank, s, plank);
-      ctx.strokeStyle = "rgba(88,58,38,.35)";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(150,120,90,.3)";
+      ctx.lineWidth = 1.5;
       ctx.strokeRect(-2, row * plank, s + 4, plank);
       for (let i = 0; i < 3; i += 1) {
         const y = row * plank + 4 + Math.random() * (plank - 8);
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.bezierCurveTo(s * 0.3, y + 3, s * 0.6, y - 3, s, y + 2);
+        ctx.bezierCurveTo(s * 0.3, y + 2, s * 0.6, y - 2, s, y + 1);
         ctx.stroke();
       }
-      const joint = Math.random() * s;
-      ctx.fillStyle = "rgba(88,58,38,.4)";
-      ctx.fillRect(joint, row * plank, 2, plank);
     }
   });
 }
 
-function carpetTexture(base = "#8d9aa8") {
+function carpetTexture(base = "#e8e4dc") {
   return makeCanvas(256, (ctx, s) => {
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, s, s);
-    for (let i = 0; i < 5200; i += 1) {
-      const shade = 120 + Math.floor(Math.random() * 80);
-      ctx.fillStyle = `rgba(${shade}, ${shade + 6}, ${shade + 14}, .5)`;
+    for (let i = 0; i < 4200; i += 1) {
+      const shade = 200 + Math.floor(Math.random() * 40);
+      ctx.fillStyle = `rgba(${shade}, ${shade - 4}, ${shade - 12}, .5)`;
       ctx.fillRect(Math.random() * s, Math.random() * s, 2, 2);
-    }
-    ctx.strokeStyle = "rgba(70,82,96,.3)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= s; i += 32) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, s); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(s, i); ctx.stroke();
     }
   });
 }
 
-function tileTexture(base = "#cfe8ec") {
+function tileTexture(base = "#f4f2ee") {
   return makeCanvas(256, (ctx, s) => {
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, s, s);
     const step = s / 8;
     for (let y = 0; y < 8; y += 1) {
       for (let x = 0; x < 8; x += 1) {
-        const shade = 188 + Math.floor(Math.random() * 30);
-        ctx.fillStyle = `rgb(${shade - 30}, ${shade}, ${shade + 6})`;
+        const shade = 236 + Math.floor(Math.random() * 12);
+        ctx.fillStyle = `rgb(${shade}, ${shade - 2}, ${shade - 6})`;
         ctx.fillRect(x * step + 1, y * step + 1, step - 2, step - 2);
       }
     }
@@ -249,10 +241,10 @@ function tileTexture(base = "#cfe8ec") {
 
 function grassTexture() {
   return makeCanvas(256, (ctx, s) => {
-    ctx.fillStyle = "#6fa86f";
+    ctx.fillStyle = "#7fb86a";
     ctx.fillRect(0, 0, s, s);
     for (let i = 0; i < 6000; i += 1) {
-      const g = 120 + Math.floor(Math.random() * 70);
+      const g = 110 + Math.floor(Math.random() * 70);
       ctx.fillStyle = `rgba(${Math.floor(g * 0.55)}, ${g}, ${Math.floor(g * 0.5)}, .55)`;
       ctx.fillRect(Math.random() * s, Math.random() * s, 2, 3);
     }
@@ -261,64 +253,75 @@ function grassTexture() {
 
 function rugTexture() {
   return makeCanvas(256, (ctx, s) => {
-    ctx.fillStyle = "#c96f5c";
+    ctx.fillStyle = "#d8c8a8";
     ctx.fillRect(0, 0, s, s);
-    ctx.strokeStyle = "rgba(255,240,220,.5)";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255,250,240,.5)";
+    ctx.lineWidth = 2;
     for (let i = 0; i < 4; i += 1) {
       ctx.beginPath();
-      ctx.arc(s / 2, s / 2, 20 + i * 22, 0, Math.PI * 2);
+      ctx.arc(s / 2, s / 2, 24 + i * 26, 0, Math.PI * 2);
       ctx.stroke();
-    }
-    ctx.fillStyle = "rgba(255,240,220,.35)";
-    for (let i = 0; i < 40; i += 1) {
-      const a = (i / 40) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.arc(s / 2 + Math.cos(a) * 90, s / 2 + Math.sin(a) * 90, 4, 0, Math.PI * 2);
-      ctx.fill();
     }
   });
 }
 
 function prayRugTexture() {
   return makeCanvas(128, (ctx, s) => {
-    ctx.fillStyle = "#3f6b5e";
+    ctx.fillStyle = "#3a4a4a";
     ctx.fillRect(0, 0, s, s);
-    ctx.strokeStyle = "rgba(240,230,200,.75)";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(240,235,210,.7)";
+    ctx.lineWidth = 2;
     ctx.strokeRect(6, 6, s - 12, s - 12);
     ctx.beginPath();
-    ctx.moveTo(s / 2, 18);
-    ctx.lineTo(s - 18, s / 2);
-    ctx.lineTo(s / 2, s - 18);
-    ctx.lineTo(18, s / 2);
+    ctx.moveTo(s / 2, 14);
+    ctx.lineTo(s - 14, s / 2);
+    ctx.lineTo(s / 2, s - 14);
+    ctx.lineTo(14, s / 2);
     ctx.closePath();
     ctx.stroke();
-    ctx.fillStyle = "rgba(240,230,200,.35)";
-    ctx.fillRect(s / 2 - 8, s / 2 - 8, 16, 16);
   });
 }
 
 function menuBoardTexture() {
   return makeCanvas(256, (ctx, s) => {
-    ctx.fillStyle = "#2f353d";
+    ctx.fillStyle = "#1e2126";
     ctx.fillRect(0, 0, s, s);
-    ctx.strokeStyle = "#e1aa5d";
-    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#c8a860";
+    ctx.lineWidth = 5;
     ctx.strokeRect(8, 8, s - 16, s - 16);
-    ctx.fillStyle = "#f5ebd8";
-    ctx.font = "bold 26px Georgia, serif";
+    ctx.fillStyle = "#f5efe0";
+    ctx.font = "bold 24px Georgia, serif";
     ctx.textAlign = "center";
-    ctx.fillText("KEDAI KOPI", s / 2, 44);
-    ctx.font = "16px Georgia, serif";
-    ctx.fillStyle = "#d9cdb8";
-    const items = ["Kopi Susu", "Es Kopi Aren", "Kopi Tubruk", "Cappuccino", "Matcha Latte", "Roti Bakar"];
-    items.forEach((t, i) => ctx.fillText(t, s / 2, 86 + i * 26));
+    ctx.fillText("COFFEE BAR", s / 2, 42);
+    ctx.font = "15px Georgia, serif";
+    ctx.fillStyle = "#d8d0c0";
+    const items = ["Espresso", "Cappuccino", "Matcha Latte", "Cold Brew", "Roti Bakar", "Kopi Susu"];
+    items.forEach((t, i) => ctx.fillText(t, s / 2, 82 + i * 26));
+  });
+}
+
+function wallArtTexture() {
+  return makeCanvas(256, (ctx, s) => {
+    ctx.fillStyle = "#f0ece4";
+    ctx.fillRect(0, 0, s, s);
+    ctx.fillStyle = "#5a9fd4";
+    ctx.beginPath();
+    ctx.arc(s * 0.35, s * 0.4, 40, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#e05a4e";
+    ctx.fillRect(s * 0.55, s * 0.25, 60, 60);
+    ctx.fillStyle = "#7ec87e";
+    ctx.beginPath();
+    ctx.moveTo(s * 0.2, s * 0.8);
+    ctx.lineTo(s * 0.4, s * 0.55);
+    ctx.lineTo(s * 0.6, s * 0.8);
+    ctx.closePath();
+    ctx.fill();
   });
 }
 
 /* ------------------------------------------------------------------ */
-/* NavGrid — A* untuk pergerakan NPC                                   */
+/* NavGrid — A* pathfinding NPC                                        */
 /* ------------------------------------------------------------------ */
 
 export class NavGrid {
@@ -460,7 +463,7 @@ export class NavGrid {
 }
 
 /* ------------------------------------------------------------------ */
-/* InstancePool — gambar banyak objek dengan 1 draw call               */
+/* InstancePool — 1 draw call untuk banyak objek                       */
 /* ------------------------------------------------------------------ */
 
 export class InstancePool {
@@ -503,47 +506,54 @@ export class InstancePool {
 
 function buildMaterials() {
   const wood = woodTexture();
-  const woodMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.55, metalness: 0.04, color: 0xd8c8b0 });
+  const woodMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.5, metalness: 0.03, color: 0xf0e6d8 });
   const carpet = carpetTexture();
-  const carpetMat = new THREE.MeshStandardMaterial({ map: carpet, roughness: 0.95, metalness: 0, color: 0xe8e0d8 });
+  const carpetMat = new THREE.MeshStandardMaterial({ map: carpet, roughness: 0.95, metalness: 0, color: 0xf0ece4 });
   const tile = tileTexture();
-  const tileMat = new THREE.MeshStandardMaterial({ map: tile, roughness: 0.32, metalness: 0.02, color: 0xf0e8e0 });
+  const tileMat = new THREE.MeshStandardMaterial({ map: tile, roughness: 0.3, metalness: 0.02, color: 0xf8f6f2 });
   const grass = grassTexture();
-  const grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 0.95, metalness: 0, color: 0xa8e888 });
+  const grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 0.95, metalness: 0, color: 0x98d878 });
   const rug = rugTexture();
-  const rugMat = new THREE.MeshStandardMaterial({ map: rug, roughness: 0.92, metalness: 0, color: 0xd8b888 });
+  const rugMat = new THREE.MeshStandardMaterial({ map: rug, roughness: 0.92, metalness: 0, color: 0xd8c8a8 });
   const prayRug = prayRugTexture();
-  const prayRugMat = new THREE.MeshStandardMaterial({ map: prayRug, roughness: 0.9, metalness: 0, color: 0xc8b8a0 });
+  const prayRugMat = new THREE.MeshStandardMaterial({ map: prayRug, roughness: 0.9, metalness: 0, color: 0x4a5a5a });
   const menu = menuBoardTexture();
-  const menuMat = new THREE.MeshStandardMaterial({ map: menu, roughness: 0.85, metalness: 0, color: 0xd8c8b0 });
+  const menuMat = new THREE.MeshStandardMaterial({ map: menu, roughness: 0.85, metalness: 0, color: 0xf0ece4 });
+  const art = wallArtTexture();
+  const artMat = new THREE.MeshStandardMaterial({ map: art, roughness: 0.9, metalness: 0, color: 0xf0ece4 });
   const vertexMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.72, metalness: 0.05 });
   const glassMat = new THREE.MeshStandardMaterial({
-    color: 0xa8d8e8, transparent: true, opacity: 0.26, roughness: 0.08, metalness: 0.1, side: THREE.DoubleSide
+    color: 0xd8ecf4, transparent: true, opacity: 0.18, roughness: 0.05, metalness: 0.1, side: THREE.DoubleSide
   });
-  const metalMat = new THREE.MeshStandardMaterial({ color: 0xa8a098, roughness: 0.35, metalness: 0.75 });
-  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x888078, roughness: 0.45, metalness: 0.6 });
-  const fabricMat = new THREE.MeshStandardMaterial({ color: 0xd8b898, roughness: 0.95, metalness: 0 });
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x2d2d2d, roughness: 0.4, metalness: 0.8 });
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0xb8b8b8, roughness: 0.3, metalness: 0.75 });
+  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, roughness: 0.45, metalness: 0.6 });
+  const fabricMat = new THREE.MeshStandardMaterial({ color: 0xd4c8b8, roughness: 0.95, metalness: 0 });
   const screenMat = new THREE.MeshStandardMaterial({
-    color: 0x2a3a4a, emissive: 0x4a8ac8, emissiveIntensity: 0.6, roughness: 0.25, metalness: 0.1
+    color: 0x1a2530, emissive: 0x4a8ac8, emissiveIntensity: 0.5, roughness: 0.25, metalness: 0.1
   });
   const ledMat = new THREE.MeshStandardMaterial({
-    color: 0xf5f0e8, emissive: 0xfff2cf, emissiveIntensity: 0.9, roughness: 0.4, metalness: 0
+    color: 0xf8f6f2, emissive: 0xfff2cf, emissiveIntensity: 0.85, roughness: 0.4, metalness: 0
   });
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x88d878, roughness: 0.85, metalness: 0 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x6ec86e, roughness: 0.85, metalness: 0 });
   const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x88c8f8, transparent: true, opacity: 0.72, roughness: 0.12, metalness: 0.05
+    color: 0x88c8f0, transparent: true, opacity: 0.7, roughness: 0.12, metalness: 0.05
   });
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.9, metalness: 0 });
-  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xe8e0d8, roughness: 0.85, metalness: 0 });
-  const rubberMat = new THREE.MeshStandardMaterial({ color: 0xb8b0a8, roughness: 0.95, metalness: 0 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xf8f6f2, roughness: 0.9, metalness: 0 });
+  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xf0ece4, roughness: 0.85, metalness: 0 });
+  const rubberMat = new THREE.MeshStandardMaterial({ color: 0xc8c0b8, roughness: 0.95, metalness: 0 });
+  const sageMat = new THREE.MeshStandardMaterial({ color: 0xa8c8a8, roughness: 0.8, metalness: 0 });
+  const terracottaMat = new THREE.MeshStandardMaterial({ color: 0xd88a6a, roughness: 0.8, metalness: 0 });
+  const navyMat = new THREE.MeshStandardMaterial({ color: 0x3a5a7a, roughness: 0.8, metalness: 0 });
   return {
-    woodMat, carpetMat, tileMat, grassMat, rugMat, prayRugMat, menuMat, vertexMat, glassMat, metalMat,
-    darkMetal, fabricMat, screenMat, ledMat, leafMat, waterMat, wallMat, concreteMat, rubberMat
+    woodMat, carpetMat, tileMat, grassMat, rugMat, prayRugMat, menuMat, artMat, vertexMat, glassMat, frameMat,
+    metalMat, darkMetal, fabricMat, screenMat, ledMat, leafMat, waterMat, wallMat, concreteMat, rubberMat,
+    sageMat, terracottaMat, navyMat
   };
 }
 
 /* ------------------------------------------------------------------ */
-/* Helper mebel & dekor                                                 */
+/* Helper mesh & mebel modern                                          */
 /* ------------------------------------------------------------------ */
 
 function mesh(geo, mat, x = 0, y = 0, z = 0, ry = 0, parent = null, shadow = false) {
@@ -556,55 +566,56 @@ function mesh(geo, mat, x = 0, y = 0, z = 0, ry = 0, parent = null, shadow = fal
   return m;
 }
 
-/** Meja kerja + kursi + monitor (1 workstation). */
+/** Meja bench modern + kursi ergonomis + monitor. */
 function buildDeskCluster(M, parent, x, z, ry, world) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
   g.rotation.y = ry;
   parent.add(g);
 
-  mesh(rbox(1.8, 0.07, 1.0, 0xd9c3a0, 0.02), M.vertexMat, 0, 0.74, 0, 0, g);
-  for (const dx of [-0.8, 0.8]) {
-    for (const dz of [-0.4, 0.4]) {
-      mesh(box(0.07, 0.72, 0.07, 0x644832), M.vertexMat, dx, 0.36, dz, 0, g, false);
-    }
+  mesh(rbox(1.9, 0.06, 1.0, 0xf5efe6, 0.02), M.vertexMat, 0, 0.74, 0, 0, g);
+  mesh(box(1.9, 0.02, 0.06, 0xe8ddd0), M.vertexMat, 0, 0.72, 0.47, 0, g, false);
+  for (const dx of [-0.85, 0.85]) {
+    mesh(box(0.06, 0.72, 0.06, 0x2d2d2d), M.vertexMat, dx, 0.36, -0.35, 0, g, false);
+    mesh(box(0.06, 0.72, 0.06, 0x2d2d2d), M.vertexMat, dx, 0.36, 0.35, 0, g, false);
   }
-  mesh(box(0.6, 0.36, 0.03, 0x2b323a), M.vertexMat, 0, 1.06, -0.28, 0, g, false);
-  mesh(box(0.52, 0.28, 0.012, 0x3d6a8a), M.screenMat, 0, 1.06, -0.26, 0, g, false);
-  mesh(box(0.1, 0.18, 0.05, 0x3c454e), M.vertexMat, 0, 0.85, -0.28, 0, g, false);
-  mesh(box(0.46, 0.02, 0.16, 0xe8e2d4), M.vertexMat, 0, 0.79, 0.08, 0, g, false);
-  mesh(box(0.09, 0.02, 0.13, 0xe8e2d4), M.vertexMat, 0.38, 0.79, 0.08, 0, g, false);
-  mesh(sph(0.055, 6, 5, 0x558568), M.vertexMat, -0.62, 0.86, -0.28, 0, g, false);
+  mesh(box(0.58, 0.34, 0.025, 0x1a2530), M.vertexMat, 0, 1.04, -0.26, 0, g, false);
+  mesh(box(0.5, 0.26, 0.01, 0x3d6a8a), M.screenMat, 0, 1.04, -0.245, 0, g, false);
+  mesh(box(0.08, 0.16, 0.04, 0x2d2d2d), M.vertexMat, 0, 0.84, -0.26, 0, g, false);
+  mesh(box(0.44, 0.018, 0.15, 0xf0ece4), M.vertexMat, 0, 0.78, 0.1, 0, g, false);
+  mesh(box(0.08, 0.018, 0.12, 0xf0ece4), M.vertexMat, 0.36, 0.78, 0.1, 0, g, false);
+  mesh(sph(0.05, 6, 5, 0x6ec86e), M.vertexMat, -0.6, 0.84, -0.26, 0, g, false);
 
   const chair = new THREE.Group();
-  chair.position.set(0, 0, 0.92);
+  chair.position.set(0, 0, 0.9);
   chair.rotation.y = Math.PI;
   g.add(chair);
-  mesh(rbox(0.55, 0.07, 0.52, 0x3f4a55, 0.02), M.vertexMat, 0, 0.46, 0, 0, chair, false);
-  mesh(rbox(0.55, 0.55, 0.07, 0x3f4a55, 0.02), M.vertexMat, 0, 0.75, -0.24, 0, chair, false);
-  for (const dx of [-0.22, 0.22]) {
-    for (const dz of [-0.2, 0.2]) {
-      mesh(cyl(0.03, 0.03, 0.44, 6, 0x3c454e), M.vertexMat, dx, 0.22, dz, 0, chair, false);
-    }
+  mesh(rbox(0.52, 0.06, 0.5, 0x3a3a3a, 0.02), M.vertexMat, 0, 0.45, 0, 0, chair, false);
+  mesh(rbox(0.5, 0.5, 0.05, 0x3a3a3a, 0.02), M.vertexMat, 0, 0.72, -0.22, 0, chair, false);
+  mesh(cyl(0.025, 0.025, 0.42, 6, 0x2d2d2d), M.vertexMat, 0, 0.22, 0, 0, chair, false);
+  for (const a of [0.6, 2.4, 4.2]) {
+    mesh(box(0.04, 0.02, 0.3, 0x2d2d2d), M.vertexMat, Math.cos(a) * 0.18, 0.02, Math.sin(a) * 0.18, 0, chair, false);
   }
-  world.nav.blockRect(x, z, 1.9, 1.5);
+  world.nav.blockRect(x, z, 2.0, 1.6);
 }
 
-/** Pohon / tanaman hias — dimasukkan ke InstancePool global (1 draw call per bagian). */
+/** Tanaman hias — instanced per parent. */
 function buildPlant(M, parent, x, z, scale = 1) {
   if (!parent.userData.plantPools) {
     parent.userData.plantPools = {
-      trunk: new InstancePool(M.vertexMat, cyl(0.14, 0.18, 0.32, 8, 0x8a5a3b)),
-      leaf1: new InstancePool(M.vertexMat, sph(0.34, 8, 6, 0x4e8d57)),
-      leaf2: new InstancePool(M.vertexMat, sph(0.26, 8, 6, 0x5c9d63)),
-      leaf3: new InstancePool(M.vertexMat, sph(0.2, 8, 6, 0x3f7a4c))
+      trunk: new InstancePool(M.vertexMat, cyl(0.12, 0.16, 0.3, 8, 0x8a6a4a)),
+      leaf1: new InstancePool(M.vertexMat, sph(0.32, 8, 6, 0x4e9d57)),
+      leaf2: new InstancePool(M.vertexMat, sph(0.24, 8, 6, 0x5cae63)),
+      leaf3: new InstancePool(M.vertexMat, sph(0.18, 8, 6, 0x3f8a4c)),
+      pot: new InstancePool(M.vertexMat, cyl(0.2, 0.16, 0.24, 10, 0xd8d0c4))
     };
   }
   const p = parent.userData.plantPools;
-  p.trunk.add(x, 0.16 * scale, z, 0, scale, scale, scale);
-  p.leaf1.add(x, 0.5 * scale, z, 0, scale, scale, scale);
-  p.leaf2.add(x + 0.16 * scale, 0.72 * scale, z + 0.06 * scale, 0, scale, scale, scale);
-  p.leaf3.add(x - 0.15 * scale, 0.78 * scale, z - 0.08 * scale, 0, scale, scale, scale);
+  p.pot.add(x, 0.12 * scale, z, 0, scale, scale, scale);
+  p.trunk.add(x, 0.3 * scale, z, 0, scale, scale, scale);
+  p.leaf1.add(x, 0.55 * scale, z, 0, scale, scale, scale);
+  p.leaf2.add(x + 0.14 * scale, 0.75 * scale, z + 0.05 * scale, 0, scale, scale, scale);
+  p.leaf3.add(x - 0.13 * scale, 0.8 * scale, z - 0.07 * scale, 0, scale, scale, scale);
 }
 
 function flushPlantPools(parent) {
@@ -614,107 +625,209 @@ function flushPlantPools(parent) {
   parent.userData.plantPools = null;
 }
 
-/** Lampu gantung — dimasukkan ke InstancePool global. */
-function buildHangingLamp(M, parent, world, x, z, y = 2.6, warm = 0xffe6b8) {
-  if (!parent.userData.lampPools) {
-    parent.userData.lampPools = {
-      rod: new InstancePool(M.vertexMat, cyl(0.02, 0.02, 0.5, 4, 0x3c454e)),
-      shade: new InstancePool(M.vertexMat, cyl(0.28, 0.16, 0.22, 12, 0x3c454e)),
-      bulb: new InstancePool(M.ledMat, sph(0.1, 8, 6, warm))
+/** Lampu linear LED modern — instanced. */
+function buildLinearLight(M, parent, world, x, z, y = 3.0, len = 2.4) {
+  if (!parent.userData.linearPools) {
+    parent.userData.linearPools = {
+      housing: new InstancePool(M.vertexMat, box(0.08, 0.06, len, 0x2d2d2d)),
+      strip: new InstancePool(M.ledMat, box(0.05, 0.02, len - 0.1, 0xfff2cf))
     };
   }
-  const p = parent.userData.lampPools;
-  p.rod.add(x, y + 0.25, z);
-  p.shade.add(x, y, z);
-  p.bulb.add(x, y - 0.1, z);
+  const p = parent.userData.linearPools;
+  p.housing.add(x, y, z);
+  p.strip.add(x, y - 0.03, z);
   world.lampMaterials.push(M.ledMat);
 }
 
-function flushLampPools(parent) {
-  const p = parent.userData.lampPools;
+function flushLinearPools(parent) {
+  const p = parent.userData.linearPools;
   if (!p) return;
-  p.rod.build(parent, { castShadow: false, receiveShadow: false });
-  p.shade.build(parent, { castShadow: false, receiveShadow: false });
-  p.bulb.build(parent, { castShadow: false, receiveShadow: false });
-  parent.userData.lampPools = null;
+  p.housing.build(parent, { castShadow: false, receiveShadow: false });
+  p.strip.build(parent, { castShadow: false, receiveShadow: false });
+  parent.userData.linearPools = null;
 }
 
-/** Sofa + meja coffee. */
-function buildSofaSet(M, parent, x, z, ry = 0) {
+/** Sofa modular modern + coffee table. */
+function buildSofaSet(M, parent, x, z, ry = 0, color = 0xd4c8b8) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
   g.rotation.y = ry;
   parent.add(g);
-  mesh(rbox(2.4, 0.5, 1.0, 0x965c62, 0.06), M.vertexMat, 0, 0.3, -0.2, 0, g);
-  mesh(rbox(2.4, 0.7, 0.24, 0x965c62, 0.06), M.vertexMat, 0, 0.72, -0.62, 0, g);
-  mesh(rbox(0.24, 0.5, 1.0, 0x8a4f56, 0.05), M.vertexMat, -1.2, 0.5, -0.2, 0, g);
-  mesh(rbox(0.24, 0.5, 1.0, 0x8a4f56, 0.05), M.vertexMat, 1.2, 0.5, -0.2, 0, g);
-  mesh(rbox(0.7, 0.22, 0.5, 0xb37c6b, 0.04), M.vertexMat, -0.5, 0.62, -0.2, 0, g, false);
-  mesh(rbox(0.7, 0.22, 0.5, 0xb37c6b, 0.04), M.vertexMat, 0.5, 0.62, -0.2, 0, g, false);
+  mesh(rbox(2.2, 0.45, 0.9, color, 0.06), M.vertexMat, 0, 0.28, -0.15, 0, g);
+  mesh(rbox(2.2, 0.6, 0.22, color, 0.06), M.vertexMat, 0, 0.62, -0.5, 0, g);
+  mesh(rbox(0.22, 0.45, 0.9, color, 0.05), M.vertexMat, -1.0, 0.45, -0.15, 0, g);
+  mesh(rbox(0.22, 0.45, 0.9, color, 0.05), M.vertexMat, 1.0, 0.45, -0.15, 0, g);
+  mesh(rbox(0.6, 0.18, 0.4, 0xe4d8c8, 0.04), M.vertexMat, -0.4, 0.55, -0.15, 0, g, false);
+  mesh(rbox(0.6, 0.18, 0.4, 0xe4d8c8, 0.04), M.vertexMat, 0.4, 0.55, -0.15, 0, g, false);
   return g;
 }
 
-/** Meja makan / rapat + kursi. */
+/** Meja rapat modern + kursi. */
 function buildTableSet(M, parent, x, z, ry, w = 1.8, d = 1.0, seats = 4, world) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
   g.rotation.y = ry;
   parent.add(g);
-  mesh(rbox(w, 0.07, d, 0xd9c3a0, 0.02), M.vertexMat, 0, 0.74, 0, 0, g);
-  for (const dx of [-w / 2 + 0.12, w / 2 - 0.12]) {
-    for (const dz of [-d / 2 + 0.12, d / 2 - 0.12]) {
-      mesh(box(0.07, 0.72, 0.07, 0x644832), M.vertexMat, dx, 0.36, dz, 0, g, false);
-    }
+  mesh(rbox(w, 0.06, d, 0xf5efe6, 0.02), M.vertexMat, 0, 0.74, 0, 0, g);
+  for (const dx of [-w / 2 + 0.1, w / 2 - 0.1]) {
+    mesh(box(0.05, 0.72, 0.05, 0x2d2d2d), M.vertexMat, dx, 0.36, -d / 2 + 0.1, 0, g, false);
+    mesh(box(0.05, 0.72, 0.05, 0x2d2d2d), M.vertexMat, dx, 0.36, d / 2 - 0.1, 0, g, false);
   }
   const positions = [];
   for (let i = 0; i < seats; i += 1) {
     const t = seats === 1 ? 0.5 : i / (seats - 1);
     const px = (t - 0.5) * (w - 0.5);
     const side = i % 2 === 0 ? 1 : -1;
-    positions.push({ x: px, z: side * (d / 2 + 0.42), ry: side > 0 ? Math.PI : 0 });
+    positions.push({ x: px, z: side * (d / 2 + 0.4), ry: side > 0 ? Math.PI : 0 });
   }
   for (const s of positions) {
     const c = new THREE.Group();
     c.position.set(s.x, 0, s.z);
     c.rotation.y = s.ry;
     g.add(c);
-    mesh(rbox(0.46, 0.06, 0.44, 0x3f4a55, 0.02), M.vertexMat, 0, 0.45, 0, 0, c, false);
-    mesh(rbox(0.46, 0.48, 0.06, 0x3f4a55, 0.02), M.vertexMat, 0, 0.7, -0.2, 0, c, false);
+    mesh(rbox(0.44, 0.05, 0.42, 0x3a3a3a, 0.02), M.vertexMat, 0, 0.44, 0, 0, c, false);
+    mesh(rbox(0.44, 0.46, 0.05, 0x3a3a3a, 0.02), M.vertexMat, 0, 0.68, -0.19, 0, c, false);
   }
-  if (world) world.nav.blockRect(x, z, w + 0.6, d + 1.4);
+  if (world) world.nav.blockRect(x, z, w + 0.5, d + 1.3);
   return g;
 }
 
-/** Rak buku / display. */
+/** Rak buku modern. */
 function buildShelf(M, parent, x, z, ry, w = 1.8, world) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
   g.rotation.y = ry;
   parent.add(g);
-  mesh(box(w, 0.05, 0.36, 0x98633e), M.vertexMat, 0, 0.15, 0, 0, g, false);
-  mesh(box(w, 0.05, 0.36, 0x98633e), M.vertexMat, 0, 0.75, 0, 0, g, false);
-  mesh(box(w, 0.05, 0.36, 0x98633e), M.vertexMat, 0, 1.35, 0, 0, g, false);
-  mesh(box(w, 1.5, 0.05, 0x644832), M.vertexMat, 0, 0.75, -0.17, 0, g, false);
-  const colors = [0xb72d38, 0x558568, 0x78a9c5, 0xe1aa5d, 0x965c62, 0x4a5560, 0xd5a66f, 0x6fa86f];
+  mesh(box(w, 0.04, 0.34, 0xf5efe6), M.vertexMat, 0, 0.12, 0, 0, g, false);
+  mesh(box(w, 0.04, 0.34, 0xf5efe6), M.vertexMat, 0, 0.72, 0, 0, g, false);
+  mesh(box(w, 0.04, 0.34, 0xf5efe6), M.vertexMat, 0, 1.32, 0, 0, g, false);
+  mesh(box(w, 1.44, 0.04, 0xe8ddd0), M.vertexMat, 0, 0.72, -0.16, 0, g, false);
+  const colors = [0xe05a4e, 0x5a9fd4, 0xf0c860, 0x7ec87e, 0xd88a6a, 0x3a5a7a, 0xa8c8a8, 0x8a7a68];
   for (let i = 0; i < 12; i += 1) {
     const lvl = i % 3;
     const bx = -w / 2 + 0.2 + ((i * 0.13) % (w - 0.4));
-    mesh(box(0.14, 0.34, 0.24, colors[i % colors.length]), M.vertexMat, bx, 0.38 + lvl * 0.6, 0, 0, g, false);
+    mesh(box(0.13, 0.32, 0.22, colors[i % colors.length]), M.vertexMat, bx, 0.34 + lvl * 0.6, 0, 0, g, false);
   }
   if (world) world.nav.blockRect(x, z, w, 0.6);
   return g;
 }
 
-/** Patch lantai tak kasat mata per zona — dipakai raycast klik ruang. */
+/** Reception desk modern. */
+function buildReceptionDesk(M, parent, x, z, ry) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = ry;
+  parent.add(g);
+  mesh(rbox(3.2, 1.1, 0.8, 0xf5efe6, 0.04), M.vertexMat, 0, 0.55, 0, 0, g);
+  mesh(rbox(3.4, 0.06, 1.0, 0xe8ddd0, 0.03), M.vertexMat, 0, 1.13, 0, 0, g);
+  mesh(box(0.4, 0.3, 0.02, 0x1a2530), M.screenMat, -0.8, 1.35, 0, 0, g, false);
+  mesh(box(0.34, 0.22, 0.01, 0x3d6a8a), M.screenMat, -0.8, 1.35, 0.01, 0, g, false);
+  mesh(sph(0.08, 8, 6, 0x6ec86e), M.vertexMat, 1.0, 1.25, 0, 0, g, false);
+  return g;
+}
+
+/** Phone booth modern. */
+function buildPhoneBooth(M, parent, x, z, ry) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = ry;
+  parent.add(g);
+  mesh(box(1.0, 2.4, 0.08, 0x3a3a3a), M.vertexMat, 0, 1.2, -0.45, 0, g);
+  mesh(box(0.08, 2.4, 0.9, 0x3a3a3a), M.vertexMat, -0.5, 1.2, 0, 0, g);
+  mesh(box(0.08, 2.4, 0.9, 0x3a3a3a), M.vertexMat, 0.5, 1.2, 0, 0, g);
+  mesh(box(1.0, 0.08, 0.9, 0x3a3a3a), M.vertexMat, 0, 2.4, 0, 0, g);
+  mesh(box(0.9, 0.06, 0.8, 0xf5efe6), M.vertexMat, 0, 0.9, 0, 0, g, false);
+  mesh(box(0.5, 0.5, 0.06, 0x3a3a3a), M.vertexMat, 0, 1.5, -0.4, 0, g, false);
+  return g;
+}
+
+/* ------------------------------------------------------------------ */
+/* Glass partition system — dinding kaca dengan frame metal tipis      */
+/* ------------------------------------------------------------------ */
+
+function initGlassPools(world, M) {
+  world.glassPools = {
+    panel: new InstancePool(M.glassMat, new THREE.BoxGeometry(1.44, 3.0, 0.04)),
+    post: new InstancePool(M.frameMat, new THREE.BoxGeometry(0.07, 3.05, 0.07)),
+    railTop: new InstancePool(M.frameMat, new THREE.BoxGeometry(1.5, 0.07, 0.07)),
+    railBottom: new InstancePool(M.frameMat, new THREE.BoxGeometry(1.5, 0.07, 0.07)),
+    door: new InstancePool(M.glassMat, new THREE.BoxGeometry(1.3, 2.2, 0.03)),
+    doorHandle: new InstancePool(M.frameMat, new THREE.BoxGeometry(0.04, 0.3, 0.04))
+  };
+}
+
+/**
+ * Tambah dinding kaca. x,z = tengah dinding, len = panjang, ry = rotasi.
+ * opts.door = true → ada bukaan pintu 1.4m di tengah.
+ */
+function glassWall(world, x, z, len, h, ry, opts = {}) {
+  const door = opts.door || false;
+  const p = world.glassPools;
+  const panelW = 1.5;
+  const doorW = 1.4;
+  const cos = Math.cos(ry);
+  const sin = Math.sin(ry);
+  const wx = (offset) => x + cos * offset;
+  const wz = (offset) => z - sin * offset;
+
+  const addSegment = (start, segLen) => {
+    const count = Math.max(1, Math.round(segLen / panelW));
+    for (let i = 0; i < count; i += 1) {
+      const offset = start + panelW / 2 + i * panelW;
+      p.panel.add(wx(offset), h / 2, wz(offset), ry);
+      p.post.add(wx(offset - panelW / 2), h / 2, wz(offset - panelW / 2), ry);
+      p.railTop.add(wx(offset), h - 0.035, wz(offset), ry);
+      p.railBottom.add(wx(offset), 0.035, wz(offset), ry);
+    }
+  };
+
+  if (door) {
+    const sideLen = (len - doorW) / 2;
+    addSegment(-len / 2, sideLen);
+    addSegment(doorW / 2, sideLen);
+    p.post.add(wx(-doorW / 2), h / 2, wz(-doorW / 2), ry);
+    p.post.add(wx(doorW / 2), h / 2, wz(doorW / 2), ry);
+    p.door.add(wx(0), 1.1, wz(0), ry);
+    p.doorHandle.add(wx(0.5), 1.0, wz(0.5), ry);
+  } else {
+    addSegment(-len / 2, len);
+    p.post.add(wx(len / 2), h / 2, wz(len / 2), ry);
+  }
+}
+
+/** Dinding kaca di sekeliling zona (sisi yang menghadap koridor). */
+function buildZoneGlassWalls(world, zone, sides, doorSide, h = 3.0) {
+  const { cx, cz, w, d } = zone;
+  for (const side of sides) {
+    let x, z, len, ry;
+    if (side === "n") { x = cx; z = cz - d / 2; len = w; ry = 0; }
+    else if (side === "s") { x = cx; z = cz + d / 2; len = w; ry = 0; }
+    else if (side === "e") { x = cx + w / 2; z = cz; len = d; ry = Math.PI / 2; }
+    else { x = cx - w / 2; z = cz; len = d; ry = Math.PI / 2; }
+    glassWall(world, x, z, len, h, ry, { door: side === doorSide });
+  }
+}
+
+function flushGlassPools(world, parent) {
+  const p = world.glassPools;
+  if (!p) return;
+  for (const pool of Object.values(p)) pool.build(parent, { castShadow: false, receiveShadow: false });
+  world.glassPools = null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Patch lantai tak kasat mata per zona                                */
+/* ------------------------------------------------------------------ */
+
 function buildZonePatches(world, parent) {
   const mat = new THREE.MeshStandardMaterial({
     color: 0xffffff, transparent: true, opacity: 0.001, roughness: 1, metalness: 0, depthWrite: false
   });
   for (const floorKey of Object.keys(ZONES)) {
     for (const [area, zone] of Object.entries(ZONES[floorKey])) {
-      const patch = new THREE.Mesh(new THREE.PlaneGeometry(zone.w - 0.4, zone.d - 0.4), mat);
+      const patch = new THREE.Mesh(new THREE.PlaneGeometry(zone.w - 0.3, zone.d - 0.3), mat);
       patch.rotation.x = -Math.PI / 2;
-      patch.position.set(zone.cx, 0.06, zone.cz);
+      patch.position.set(zone.cx, 0.055, zone.cz);
       patch.userData.officeArea = area;
       patch.userData.officeFloor = Number(floorKey);
       patch.userData.zoneLabel = zone.label;
@@ -726,7 +839,7 @@ function buildZonePatches(world, parent) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Shell bangunan — lantai, dinding, jendela, koridor                  */
+/* Shell — lantai, dinding, facade kaca, entrance                      */
 /* ------------------------------------------------------------------ */
 
 function buildShell(world, parent, M) {
@@ -736,70 +849,250 @@ function buildShell(world, parent, M) {
 
   const floor = mesh(new THREE.BoxGeometry(innerW + 2, 0.2, innerD + 2), M.concreteMat, 0, -0.1, 0, 0, parent, false);
   floor.receiveShadow = true;
-
   const woodFloor = mesh(new THREE.BoxGeometry(innerW, 0.04, innerD), M.woodMat, 0, 0.02, 0, 0, parent, false);
   woodFloor.receiveShadow = true;
 
-  const wallMat = M.wallMat;
-  const mkWall = (w, h, d, x, y, z) => mesh(box(w, h, d, 0xf2ead9), wallMat, x, y, z, 0, parent, true);
-
+  // Dinding putih — Utara, Timur, Barat (selatan = facade kaca)
+  const mkWall = (w, h, d, x, y, z) => mesh(box(w, h, d, 0xf8f6f2), M.wallMat, x, y, z, 0, parent, true);
   mkWall(innerW + 0.6, W.wallHeight, 0.3, 0, W.wallHeight / 2, W.minZ - 0.15);
-  mkWall(innerW + 0.6, W.wallHeight, 0.3, 0, W.wallHeight / 2, W.maxZ + 0.15);
   mkWall(0.3, W.wallHeight, innerD + 0.6, W.minX - 0.15, W.wallHeight / 2, 0);
   mkWall(0.3, W.wallHeight, innerD + 0.6, W.maxX + 0.15, W.wallHeight / 2, 0);
 
-  mkWall(innerW + 0.8, 0.18, 0.42, 0, W.wallHeight + 0.09, W.minZ - 0.15);
-  mkWall(innerW + 0.8, 0.18, 0.42, 0, W.wallHeight + 0.09, W.maxZ + 0.15);
-  mkWall(0.42, 0.18, innerD + 0.8, W.minX - 0.15, W.wallHeight + 0.09, 0);
-  mkWall(0.42, 0.18, innerD + 0.8, W.maxX + 0.15, W.wallHeight + 0.09, 0);
-
-  // Jendela instanced di dinding luar
-  const winGeo = new THREE.BoxGeometry(0.1, 1.4, 2.2);
-  paint(winGeo, 0xbfe6ea);
-  const winMat = new THREE.MeshStandardMaterial({
-    vertexColors: true, transparent: true, opacity: 0.32, roughness: 0.1, metalness: 0.1
-  });
-  const wins = new InstancePool(winMat, winGeo);
-  const winY = 2.0;
-  for (let x = W.minX + 3; x <= W.maxX - 3; x += 4) {
-    wins.add(x, winY, W.minZ + 0.02, 0, 1, 1, 1);
-    wins.add(x, winY, W.maxZ - 0.02, 0, 1, 1, 1);
+  // Facade kaca selatan (entrance)
+  const facadeZ = W.maxZ + 0.15;
+  const facadePanelW = 3.0;
+  const facadeCount = Math.floor(innerW / facadePanelW);
+  for (let i = 0; i < facadeCount; i += 1) {
+    const fx = -innerW / 2 + facadePanelW / 2 + i * facadePanelW;
+    if (Math.abs(fx) < 3.5) continue;
+    mesh(box(facadePanelW - 0.1, 3.2, 0.06, 0xd8ecf4), M.glassMat, fx, 1.6, facadeZ, 0, parent, false);
+    mesh(box(0.08, 3.3, 0.08, 0x2d2d2d), M.frameMat, fx - facadePanelW / 2, 1.65, facadeZ, 0, parent, false);
   }
-  for (let z = W.minZ + 3; z <= W.maxZ - 3; z += 4) {
-    wins.add(W.minX + 0.02, winY, z, Math.PI / 2, 1, 1, 1);
-    wins.add(W.maxX - 0.02, winY, z, Math.PI / 2, 1, 1, 1);
-  }
-  wins.build(parent, { castShadow: false, receiveShadow: false });
-  world.windowMaterials.push(winMat);
+  mesh(box(0.08, 3.3, 0.08, 0x2d2d2d), M.frameMat, -3.5, 1.65, facadeZ, 0, parent, false);
+  mesh(box(0.08, 3.3, 0.08, 0x2d2d2d), M.frameMat, 3.5, 1.65, facadeZ, 0, parent, false);
+  mesh(box(innerW + 0.6, 0.12, 0.12, 0x2d2d2d), M.frameMat, 0, 3.3, facadeZ, 0, parent, false);
+  mesh(box(7.0, 0.1, 0.1, 0x2d2d2d), M.frameMat, 0, 3.25, facadeZ, 0, parent, false);
 
-  const frameGeo = new THREE.BoxGeometry(0.08, 1.5, 0.08);
-  paint(frameGeo, 0x644832);
-  const frames = new InstancePool(M.vertexMat, frameGeo);
-  for (let x = W.minX + 3; x <= W.maxX - 3; x += 4) {
-    for (const z of [W.minZ + 0.02, W.maxZ - 0.02]) {
-      frames.add(x - 1.1, winY, z, 0, 1, 1, 1);
-      frames.add(x + 1.1, winY, z, 0, 1, 1, 1);
-    }
+  // Kanopi entrance
+  mesh(box(9.0, 0.15, 2.5, 0xf5efe6), M.wallMat, 0, 3.5, W.maxZ + 1.2, 0, parent, false);
+  for (const dx of [-4.0, 4.0]) {
+    mesh(cyl(0.06, 0.06, 3.5, 8, 0x2d2d2d), M.frameMat, dx, 1.75, W.maxZ + 2.2, 0, parent, false);
   }
-  frames.build(parent, { castShadow: false, receiveShadow: false });
 
-  // Lampion merah-putih di koridor
-  const lanternGeo = new THREE.SphereGeometry(0.16, 8, 6);
-  paint(lanternGeo, 0xb72d38);
-  const lanterns = new InstancePool(M.ledMat, lanternGeo);
-  for (let x = -14; x <= 14; x += 7) {
-    lanterns.add(x, 2.9, -7.2, 0, 1, 1, 1);
-    lanterns.add(x, 2.9, 7.2, 0, 1, 1, 1);
-  }
-  lanterns.build(parent, { castShadow: false, receiveShadow: false });
+  // Baseboard
+  mesh(box(innerW + 0.6, 0.12, 0.34, 0xe8e4dc), M.wallMat, 0, 0.06, W.minZ - 0.15, 0, parent, false);
+  mesh(box(0.34, 0.12, innerD + 0.6, 0xe8e4dc), M.wallMat, W.minX - 0.15, 0.06, 0, 0, parent, false);
+  mesh(box(0.34, 0.12, innerD + 0.6, 0xe8e4dc), M.wallMat, W.maxX + 0.15, 0.06, 0, 0, parent, false);
 
-  // Karpet koridor
-  mesh(new THREE.BoxGeometry(6.4, 0.03, 40), M.carpetMat, -10.5, 0.045, 0, 0, parent, false);
-  mesh(new THREE.BoxGeometry(6.4, 0.03, 40), M.carpetMat, 10.5, 0.045, 0, 0, parent, false);
+  // Koridor — carpet runner
+  mesh(new THREE.BoxGeometry(5.0, 0.03, innerD - 8), M.carpetMat, -10.5, 0.045, 0, 0, parent, false);
+  mesh(new THREE.BoxGeometry(5.0, 0.03, innerD - 8), M.carpetMat, 10.5, 0.045, 0, 0, parent, false);
+  mesh(new THREE.BoxGeometry(innerW - 8, 0.03, 3.0), M.carpetMat, 0, 0.045, -8.5, 0, parent, false);
+  mesh(new THREE.BoxGeometry(innerW - 8, 0.03, 3.0), M.carpetMat, 0, 0.045, 8.5, 0, parent, false);
+
+  // Reception dekat entrance
+  buildReceptionDesk(M, parent, 0, 19.5, Math.PI);
+  buildPlant(M, parent, -5.5, 19.5, 1.2);
+  buildPlant(M, parent, 5.5, 19.5, 1.2);
+  mesh(box(6.0, 2.4, 0.15, 0xf0ece4), M.wallMat, 0, 1.8, 21.0, 0, parent, false);
+  mesh(box(5.6, 0.06, 0.06, 0xe05a4e), M.vertexMat, 0, 2.6, 20.9, 0, parent, false);
+  mesh(box(5.6, 0.06, 0.06, 0x2d2d2d), M.vertexMat, 0, 1.0, 20.9, 0, parent, false);
 }
 
 /* ------------------------------------------------------------------ */
-/* Zona: Workspace 48 meja                                             */
+/* Zona: Musala — ruang tenang modern                                  */
+/* ------------------------------------------------------------------ */
+
+function buildMasjid(world, parent, M) {
+  const z = ZONES[1].masjid;
+  const g = new THREE.Group();
+  parent.add(g);
+
+  mesh(new THREE.BoxGeometry(z.w, 0.04, z.d), M.carpetMat, z.cx, 0.04, z.cz, 0, g, false);
+
+  for (let i = 0; i < 6; i += 1) {
+    mesh(new THREE.BoxGeometry(1.0, 0.025, 1.6), M.prayRugMat,
+      z.cx - 4.5 + (i % 3) * 2.4, 0.055, z.cz - 1.5 + Math.floor(i / 3) * 3.0, 0, g, false);
+  }
+
+  mesh(box(3.2, 2.8, 0.12, 0x3a4a4a), M.vertexMat, z.cx, 1.4, z.cz - z.d / 2 + 0.15, 0, g);
+  mesh(box(2.6, 0.08, 0.16, 0xf0c860), M.vertexMat, z.cx, 1.4, z.cz - z.d / 2 + 0.22, 0, g, false);
+  mesh(box(1.8, 1.8, 0.06, 0x2a3a3a), M.vertexMat, z.cx, 1.4, z.cz - z.d / 2 + 0.26, 0, g, false);
+  mesh(box(1.0, 2.0, 0.25, 0x4a5a5a), M.vertexMat, z.cx, 1.0, z.cz - z.d / 2 + 0.35, 0, g, false);
+
+  mesh(rbox(0.7, 0.45, 0.7, 0xf5efe6, 0.03), M.vertexMat, z.cx + 2.2, 0.225, z.cz - z.d / 2 + 1.2, 0, g);
+  mesh(rbox(0.7, 0.9, 0.1, 0xf5efe6, 0.03), M.vertexMat, z.cx + 2.2, 0.9, z.cz - z.d / 2 + 1.2, 0, g, false);
+  mesh(sph(0.1, 8, 6, 0xf0c860), M.vertexMat, z.cx + 2.2, 1.45, z.cz - z.d / 2 + 1.2, 0, g, false);
+
+  mesh(cyl(0.55, 0.45, 0.5, 12, 0xe8e4dc), M.vertexMat, z.cx + 5.5, 0.25, z.cz + 2.0, 0, g);
+  mesh(sph(0.42, 10, 6, 0x9fd8da), M.waterMat, z.cx + 5.5, 0.5, z.cz + 2.0, 0, g, false);
+  world.waterMaterials.push(M.waterMat);
+
+  buildPlant(M, g, z.cx - 6.0, z.cz + 2.5, 1.0);
+  buildPlant(M, g, z.cx + 6.0, z.cz - 2.5, 1.0);
+
+  buildLinearLight(M, g, world, z.cx, z.cz, 3.0, 3.0);
+  buildLinearLight(M, g, world, z.cx - 3, z.cz, 2.8, 2.0);
+  buildLinearLight(M, g, world, z.cx + 3, z.cz, 2.8, 2.0);
+
+  buildZoneGlassWalls(world, z, ["s", "e"], "s");
+
+  world.decorativeSpots.push(
+    { area: "masjid", x: z.cx - 2.4, z: z.cz - 1.5, floor: 1, activity: "sholat" },
+    { area: "masjid", x: z.cx + 0.0, z: z.cz - 1.5, floor: 1, activity: "sholat" },
+    { area: "masjid", x: z.cx - 2.4, z: z.cz + 1.5, floor: 1, activity: "sholat" },
+    { area: "masjid", x: z.cx + 0.0, z: z.cz + 1.5, floor: 1, activity: "sholat" }
+  );
+  world.nav.blockRect(z.cx, z.cz - z.d / 2 + 1.2, 3.0, 1.6);
+  world.nav.blockRect(z.cx + 5.5, z.cz + 2.0, 1.1, 1.1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Zona: Meeting Room — ruang rapat kaca modern                        */
+/* ------------------------------------------------------------------ */
+
+function buildMeeting(world, parent, M) {
+  const z = ZONES[1].meeting;
+  const g = new THREE.Group();
+  parent.add(g);
+
+  mesh(new THREE.BoxGeometry(z.w, 0.04, z.d), M.rugMat, z.cx, 0.04, z.cz, 0, g, false);
+
+  mesh(cyl(2.4, 2.4, 0.06, 24, 0xf5efe6), M.vertexMat, z.cx, 0.76, z.cz, 0, g);
+  mesh(cyl(0.14, 0.18, 0.74, 10, 0x2d2d2d), M.vertexMat, z.cx, 0.38, z.cz, 0, g, false);
+
+  const seats = [];
+  for (let i = 0; i < 10; i += 1) {
+    const a = (i / 10) * Math.PI * 2;
+    const sx = z.cx + Math.cos(a) * 3.4;
+    const sz = z.cz + Math.sin(a) * 2.6;
+    const c = new THREE.Group();
+    c.position.set(sx, 0, sz);
+    c.rotation.y = -a - Math.PI / 2;
+    g.add(c);
+    mesh(rbox(0.48, 0.05, 0.46, 0x3a3a3a, 0.02), M.vertexMat, 0, 0.44, 0, 0, c, false);
+    mesh(rbox(0.48, 0.48, 0.05, 0x3a3a3a, 0.02), M.vertexMat, 0, 0.7, -0.21, 0, c, false);
+    seats.push({ x: sx, z: sz });
+  }
+  world.meetingSeats = seats;
+  world.nav.blockRect(z.cx, z.cz, 5.0, 5.6);
+
+  mesh(box(3.0, 1.7, 0.05, 0x1a2530), M.screenMat, z.cx, 1.7, z.cz - z.d / 2 + 0.2, 0, g, false);
+  mesh(box(2.2, 1.3, 0.04, 0xf8f6f2), M.vertexMat, z.cx + 4.5, 1.5, z.cz - z.d / 2 + 0.2, 0, g, false);
+  mesh(box(2.0, 0.05, 0.06, 0x2d2d2d), M.vertexMat, z.cx + 4.5, 1.5, z.cz - z.d / 2 + 0.24, 0, g, false);
+
+  buildLinearLight(M, g, world, z.cx, z.cz, 3.0, 3.5);
+  buildPlant(M, g, z.cx - 6.0, z.cz + 2.5, 1.1);
+  buildPlant(M, g, z.cx + 6.0, z.cz + 2.5, 1.1);
+
+  buildZoneGlassWalls(world, z, ["s", "w", "e"], "s");
+
+  world.decorativeSpots.push(
+    { area: "meeting", x: z.cx - 3.4, z: z.cz, floor: 1, activity: "diskusi" },
+    { area: "meeting", x: z.cx + 3.4, z: z.cz, floor: 1, activity: "diskusi" }
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Zona: Coffee Bar — kedai kopi modern                                */
+/* ------------------------------------------------------------------ */
+
+function buildKopi(world, parent, M) {
+  const z = ZONES[1].kopi;
+  const g = new THREE.Group();
+  parent.add(g);
+
+  mesh(new THREE.BoxGeometry(z.w, 0.04, z.d), M.tileMat, z.cx, 0.04, z.cz, 0, g, false);
+
+  mesh(rbox(6.0, 1.05, 0.9, 0xf5efe6, 0.04), M.vertexMat, z.cx, 0.525, z.cz - z.d / 2 + 1.2, 0, g);
+  mesh(rbox(6.4, 0.06, 1.1, 0xe8ddd0, 0.03), M.vertexMat, z.cx, 1.08, z.cz - z.d / 2 + 1.2, 0, g);
+  mesh(rbox(0.8, 0.6, 0.5, 0xb8b8b8, 0.04), M.vertexMat, z.cx - 2.0, 1.4, z.cz - z.d / 2 + 1.2, 0, g, false);
+  mesh(box(0.25, 0.25, 0.25, 0x2d2d2d), M.vertexMat, z.cx - 2.0, 1.2, z.cz - z.d / 2 + 1.0, 0, g, false);
+  mesh(box(1.8, 0.04, 0.5, 0xd8ecf4), M.glassMat, z.cx + 1.5, 1.35, z.cz - z.d / 2 + 1.2, 0, g, false);
+  for (let i = 0; i < 4; i += 1) {
+    mesh(cyl(0.06, 0.05, 0.1, 8, 0xf0ece4), M.vertexMat, z.cx + 0.9 + i * 0.4, 1.42, z.cz - z.d / 2 + 1.2, 0, g, false);
+  }
+  mesh(new THREE.PlaneGeometry(3.0, 3.0), M.menuMat, z.cx, 2.2, z.cz - z.d / 2 + 0.1, 0, g, false);
+
+  for (let i = 0; i < 5; i += 1) {
+    const sx = z.cx - 2.4 + i * 1.2;
+    mesh(cyl(0.2, 0.2, 0.06, 10, 0x3a3a3a), M.vertexMat, sx, 0.72, z.cz - z.d / 2 + 2.4, 0, g, false);
+    mesh(cyl(0.03, 0.14, 0.7, 8, 0x2d2d2d), M.vertexMat, sx, 0.36, z.cz - z.d / 2 + 2.4, 0, g, false);
+  }
+
+  buildTableSet(M, g, z.cx - 3.0, z.cz + 2.2, 0, 1.4, 1.4, 4, world);
+  buildTableSet(M, g, z.cx + 3.0, z.cz + 2.2, 0, 1.4, 1.4, 4, world);
+  buildTableSet(M, g, z.cx, z.cz + 3.6, 0, 1.4, 1.4, 4, world);
+
+  buildLinearLight(M, g, world, z.cx - 3.0, z.cz + 2.2, 2.6, 2.0);
+  buildLinearLight(M, g, world, z.cx + 3.0, z.cz + 2.2, 2.6, 2.0);
+  buildLinearLight(M, g, world, z.cx, z.cz + 3.6, 2.6, 2.0);
+  buildLinearLight(M, g, world, z.cx, z.cz - z.d / 2 + 2.0, 2.5, 2.5);
+
+  buildPlant(M, g, z.cx - 6.0, z.cz + 3.0, 1.0);
+  buildPlant(M, g, z.cx + 6.0, z.cz + 3.0, 1.0);
+  buildPlant(M, g, z.cx + 6.0, z.cz - 3.0, 1.0);
+
+  buildZoneGlassWalls(world, z, ["s", "w"], "s");
+
+  world.decorativeSpots.push(
+    { area: "kopi", x: z.cx - 3.0, z: z.cz + 2.2, floor: 1, activity: "ngopi" },
+    { area: "kopi", x: z.cx + 3.0, z: z.cz + 2.2, floor: 1, activity: "ngopi" },
+    { area: "kopi", x: z.cx, z: z.cz + 3.6, floor: 1, activity: "ngopi" },
+    { area: "kopi", x: z.cx - 1.2, z: z.cz - z.d / 2 + 2.4, floor: 1, activity: "ngopi" }
+  );
+  world.nav.blockRect(z.cx, z.cz - z.d / 2 + 1.2, 6.4, 1.3);
+}
+
+/* ------------------------------------------------------------------ */
+/* Zona: Content Studio — studio konten modern                         */
+/* ------------------------------------------------------------------ */
+
+function buildStudio(world, parent, M) {
+  const z = ZONES[1].studio;
+  const g = new THREE.Group();
+  parent.add(g);
+
+  mesh(new THREE.BoxGeometry(z.w, 0.04, z.d), M.carpetMat, z.cx, 0.04, z.cz, 0, g, false);
+
+  mesh(box(5.0, 2.8, 0.08, 0x2f7a4a), M.vertexMat, z.cx, 1.4, z.cz - z.d / 2 + 0.3, 0, g, false);
+  mesh(box(5.4, 0.08, 0.3, 0x2d2d2d), M.vertexMat, z.cx, 2.85, z.cz - z.d / 2 + 0.3, 0, g, false);
+
+  for (const dx of [-2.6, 2.6]) {
+    mesh(cyl(0.03, 0.03, 1.6, 6, 0x2d2d2d), M.vertexMat, z.cx + dx, 0.8, z.cz - 1.2, 0, g, false);
+    mesh(box(0.5, 0.4, 0.4, 0x1a2530), M.vertexMat, z.cx + dx, 1.8, z.cz - 1.2, 0, g, false);
+    mesh(box(0.4, 0.4, 0.06, 0xfff2cf), M.ledMat, z.cx + dx, 1.8, z.cz - 0.95, 0, g, false);
+    for (let i = 0; i < 3; i += 1) {
+      const a = (i / 3) * Math.PI * 2;
+      mesh(cyl(0.02, 0.02, 0.8, 5, 0x2d2d2d), M.vertexMat,
+        z.cx + dx + Math.cos(a) * 0.22, 0.4, z.cz - 1.2 + Math.sin(a) * 0.22, 0, g, false);
+    }
+  }
+
+  mesh(cyl(0.4, 0.4, 0.04, 16, 0xfff2cf), M.ledMat, z.cx, 1.9, z.cz + 0.8, 0, g, false);
+  mesh(cyl(0.025, 0.025, 1.8, 6, 0x2d2d2d), M.vertexMat, z.cx, 0.95, z.cz + 0.8, 0, g, false);
+  mesh(box(0.3, 0.2, 0.25, 0x1a2530), M.vertexMat, z.cx, 1.9, z.cz + 0.6, 0, g, false);
+
+  buildDeskCluster(M, g, z.cx - 4.0, z.cz + 4.0, Math.PI / 2, world);
+  buildDeskCluster(M, g, z.cx - 4.0, z.cz + 1.8, Math.PI / 2, world);
+
+  buildShelf(M, g, z.cx + 5.5, z.cz + 5.0, Math.PI / 2, 2.4, world);
+
+  buildLinearLight(M, g, world, z.cx, z.cz, 3.0, 3.0);
+  buildPlant(M, g, z.cx + 6.0, z.cz - 5.0, 1.0);
+
+  buildZoneGlassWalls(world, z, ["n", "e", "s"], "e");
+
+  world.decorativeSpots.push(
+    { area: "studio", x: z.cx, z: z.cz + 0.8, floor: 1, activity: "baca" },
+    { area: "studio", x: z.cx + 5.5, z: z.cz + 5.0, floor: 1, activity: "diskusi" }
+  );
+  world.nav.blockRect(z.cx, z.cz - z.d / 2 + 0.3, 5.4, 0.3);
+  world.nav.blockRect(z.cx, z.cz - 1.2, 5.6, 0.8);
+}
+
+/* ------------------------------------------------------------------ */
+/* Zona: Open Workspace — 48 meja bench modern                         */
 /* ------------------------------------------------------------------ */
 
 function buildWorkspace(world, parent, M) {
@@ -807,41 +1100,42 @@ function buildWorkspace(world, parent, M) {
   const g = new THREE.Group();
   parent.add(g);
 
-  mesh(new THREE.BoxGeometry(z.w, 0.05, z.d), M.carpetMat, z.cx, 0.05, z.cz, 0, g, false);
+  mesh(new THREE.BoxGeometry(z.w, 0.04, z.d), M.carpetMat, z.cx, 0.04, z.cz, 0, g, false);
 
-  // Semua 48 workstation digambar dengan InstancedMesh (~12 draw call, bukan 720).
-  const deskTop = new InstancePool(M.vertexMat, rbox(1.8, 0.07, 1.0, 0xd9c3a0, 0.02));
-  const deskLeg = new InstancePool(M.vertexMat, box(0.07, 0.72, 0.07, 0x644832));
-  const monitor = new InstancePool(M.vertexMat, box(0.6, 0.36, 0.03, 0x2b323a));
-  const screen = new InstancePool(M.screenMat, box(0.52, 0.28, 0.012, 0x3d6a8a));
-  const stand = new InstancePool(M.vertexMat, box(0.1, 0.18, 0.05, 0x3c454e));
-  const keyboard = new InstancePool(M.vertexMat, box(0.46, 0.02, 0.16, 0xe8e2d4));
-  const mouse = new InstancePool(M.vertexMat, box(0.09, 0.02, 0.13, 0xe8e2d4));
-  const potPlant = new InstancePool(M.vertexMat, sph(0.055, 6, 5, 0x558568));
-  const chairSeat = new InstancePool(M.vertexMat, rbox(0.55, 0.07, 0.52, 0x3f4a55, 0.02));
-  const chairBack = new InstancePool(M.vertexMat, rbox(0.55, 0.55, 0.07, 0x3f4a55, 0.02));
-  const chairLeg = new InstancePool(M.vertexMat, cyl(0.03, 0.03, 0.44, 6, 0x3c454e));
+  const deskTop = new InstancePool(M.vertexMat, rbox(1.9, 0.06, 1.0, 0xf5efe6, 0.02));
+  const deskEdge = new InstancePool(M.vertexMat, box(1.9, 0.02, 0.06, 0xe8ddd0));
+  const deskLeg = new InstancePool(M.vertexMat, box(0.06, 0.72, 0.06, 0x2d2d2d));
+  const monitor = new InstancePool(M.vertexMat, box(0.58, 0.34, 0.025, 0x1a2530));
+  const screen = new InstancePool(M.screenMat, box(0.5, 0.26, 0.01, 0x3d6a8a));
+  const stand = new InstancePool(M.vertexMat, box(0.08, 0.16, 0.04, 0x2d2d2d));
+  const keyboard = new InstancePool(M.vertexMat, box(0.44, 0.018, 0.15, 0xf0ece4));
+  const mouse = new InstancePool(M.vertexMat, box(0.08, 0.018, 0.12, 0xf0ece4));
+  const potPlant = new InstancePool(M.vertexMat, sph(0.05, 6, 5, 0x6ec86e));
+  const chairSeat = new InstancePool(M.vertexMat, rbox(0.52, 0.06, 0.5, 0x3a3a3a, 0.02));
+  const chairBack = new InstancePool(M.vertexMat, rbox(0.5, 0.5, 0.05, 0x3a3a3a, 0.02));
+  const chairLeg = new InstancePool(M.vertexMat, cyl(0.025, 0.025, 0.42, 6, 0x2d2d2d));
 
   for (const d of DESK_LAYOUT) {
-    const { x, z } = d;
-    deskTop.add(x, 0.74, z);
-    for (const dx of [-0.8, 0.8]) {
-      for (const dz of [-0.4, 0.4]) deskLeg.add(x + dx, 0.36, z + dz);
+    const { x, z: dz } = d;
+    deskTop.add(x, 0.74, dz);
+    deskEdge.add(x, 0.72, dz + 0.47);
+    for (const dx of [-0.85, 0.85]) {
+      deskLeg.add(x + dx, 0.36, dz - 0.35);
+      deskLeg.add(x + dx, 0.36, dz + 0.35);
     }
-    monitor.add(x, 1.06, z - 0.28);
-    screen.add(x, 1.06, z - 0.26);
-    stand.add(x, 0.85, z - 0.28);
-    keyboard.add(x, 0.79, z + 0.08);
-    mouse.add(x + 0.38, 0.79, z + 0.08);
-    potPlant.add(x - 0.62, 0.86, z - 0.28);
-    chairSeat.add(x, 0.46, z + 0.92, Math.PI);
-    chairBack.add(x, 0.75, z + 1.16, Math.PI);
-    for (const dx of [-0.22, 0.22]) {
-      for (const dz of [-0.2, 0.2]) chairLeg.add(x + dx, 0.22, z + 0.92 + dz, Math.PI);
-    }
-    world.nav.blockRect(x, z, 1.9, 1.5);
+    monitor.add(x, 1.04, dz - 0.26);
+    screen.add(x, 1.04, dz - 0.245);
+    stand.add(x, 0.84, dz - 0.26);
+    keyboard.add(x, 0.78, dz + 0.1);
+    mouse.add(x + 0.36, 0.78, dz + 0.1);
+    potPlant.add(x - 0.6, 0.84, dz - 0.26);
+    chairSeat.add(x, 0.45, dz + 0.9, Math.PI);
+    chairBack.add(x, 0.72, dz + 1.12, Math.PI);
+    chairLeg.add(x, 0.22, dz + 0.9, Math.PI);
+    world.nav.blockRect(x, dz, 2.0, 1.6);
   }
   deskTop.build(g, { castShadow: true, receiveShadow: true });
+  deskEdge.build(g, { castShadow: false, receiveShadow: false });
   deskLeg.build(g, { castShadow: false, receiveShadow: false });
   monitor.build(g, { castShadow: false, receiveShadow: false });
   screen.build(g, { castShadow: false, receiveShadow: false });
@@ -853,225 +1147,33 @@ function buildWorkspace(world, parent, M) {
   chairBack.build(g, { castShadow: false, receiveShadow: false });
   chairLeg.build(g, { castShadow: false, receiveShadow: false });
 
-  // Pemisah rendah antar blok
   for (const pz of [-3.5, 3.5]) {
-    mesh(box(12.6, 1.1, 0.12, 0xe8dcc8), M.wallMat, 0, 0.55, pz, 0, g, false);
+    mesh(box(14.0, 1.1, 0.1, 0xa8c8a8), M.sageMat, 0, 0.55, pz, 0, g, false);
   }
-  mesh(box(0.12, 1.1, 11.6, 0xe8dcc8), M.wallMat, 0, 0.55, 0, 0, g, false);
+  mesh(box(0.1, 1.1, 13.0, 0xa8c8a8), M.sageMat, 0, 0.55, 0, 0, g, false);
 
-  buildPlant(M, g, -6.2, -5.8, 1.2);
-  buildPlant(M, g, 6.2, -5.8, 1.2);
-  buildPlant(M, g, -6.2, 5.8, 1.2);
-  buildPlant(M, g, 6.2, 5.8, 1.2);
+  buildPhoneBooth(M, g, -7.0, 5.5, 0);
+  buildPhoneBooth(M, g, 7.0, 5.5, 0);
 
-  for (const lx of [-3.5, 3.5]) {
+  buildPlant(M, g, -6.5, -5.5, 1.2);
+  buildPlant(M, g, 6.5, -5.5, 1.2);
+  buildPlant(M, g, -6.5, 5.5, 1.2);
+  buildPlant(M, g, 6.5, 5.5, 1.2);
+
+  for (const lx of [-4, 4]) {
     for (const lz of [-3.5, 3.5]) {
-      buildHangingLamp(M, g, world, lx, lz, 2.7);
+      buildLinearLight(M, g, world, lx, lz, 3.0, 3.0);
     }
   }
 
   world.decorativeSpots.push(
-    { area: "workspace", x: -6.2, z: -5.8, floor: 1, activity: "santai" },
-    { area: "workspace", x: 6.2, z: 5.8, floor: 1, activity: "diskusi" }
+    { area: "workspace", x: -6.5, z: -5.5, floor: 1, activity: "santai" },
+    { area: "workspace", x: 6.5, z: 5.5, floor: 1, activity: "diskusi" }
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Zona: Masjid                                                        */
-/* ------------------------------------------------------------------ */
-
-function buildMasjid(world, parent, M) {
-  const z = ZONES[1].masjid;
-  const g = new THREE.Group();
-  parent.add(g);
-
-  mesh(new THREE.BoxGeometry(z.w, 0.06, z.d), M.woodMat, z.cx, 0.06, z.cz, 0, g, false);
-  for (let i = 0; i < 6; i += 1) {
-    mesh(new THREE.BoxGeometry(1.1, 0.04, 1.6), M.prayRugMat, z.cx - 4 + (i % 3) * 2.2, 0.09, z.cz - 2 + Math.floor(i / 3) * 4, 0, g, false);
-  }
-
-  // Mihrab
-  const mihrabX = z.cx;
-  mesh(box(1.8, 2.6, 0.24, 0xe1aa5d), M.vertexMat, mihrabX, 1.3, z.cz - z.d / 2 + 0.12, 0, g);
-  mesh(box(1.3, 2.1, 0.2, 0x558568), M.vertexMat, mihrabX, 1.05, z.cz - z.d / 2 + 0.22, 0, g, false);
-  mesh(sph(0.24, 8, 6, 0xe1aa5d), M.vertexMat, mihrabX, 2.2, z.cz - z.d / 2 + 0.3, 0, g, false);
-
-  // Minbar
-  mesh(box(0.7, 0.5, 0.7, 0x98633e), M.vertexMat, mihrabX + 1.6, 0.25, z.cz - z.d / 2 + 1.2, 0, g);
-  mesh(box(0.7, 0.9, 0.1, 0x98633e), M.vertexMat, mihrabX + 1.6, 0.95, z.cz - z.d / 2 + 1.2, 0, g, false);
-  mesh(sph(0.12, 8, 6, 0xe1aa5d), M.vertexMat, mihrabX + 1.6, 1.5, z.cz - z.d / 2 + 1.2, 0, g, false);
-
-  // Kubah
-  mesh(sph(2.4, 16, 10, 0x558568), M.vertexMat, z.cx, 3.4, z.cz, 0, g, false);
-  mesh(cyl(0.12, 0.12, 0.7, 8, 0xe1aa5d), M.vertexMat, z.cx, 5.2, z.cz, 0, g, false);
-  mesh(sph(0.16, 8, 6, 0xe1aa5d), M.vertexMat, z.cx, 5.6, z.cz, 0, g, false);
-
-  // Kaligrafi
-  mesh(box(2.6, 0.9, 0.06, 0x2f353d), M.vertexMat, z.cx, 2.2, z.cz + z.d / 2 - 0.12, 0, g, false);
-  mesh(box(2.2, 0.06, 0.08, 0xe1aa5d), M.vertexMat, z.cx, 2.2, z.cz + z.d / 2 - 0.1, 0, g, false);
-
-  buildHangingLamp(M, g, world, z.cx, z.cz, 3.0, 0xfff0cc);
-  buildHangingLamp(M, g, world, z.cx, z.cz - 3, 2.8);
-  buildHangingLamp(M, g, world, z.cx, z.cz + 3, 2.8);
-
-  // Tempat wudu
-  mesh(cyl(0.7, 0.6, 0.5, 12, 0x78a9c5), M.vertexMat, z.cx + 4.5, 0.25, z.cz + 4, 0, g);
-  mesh(sph(0.5, 10, 6, 0x9fd8da), M.waterMat, z.cx + 4.5, 0.52, z.cz + 4, 0, g, false);
-  world.waterMaterials.push(M.waterMat);
-
-  buildPlant(M, g, z.cx - 5.8, z.cz + 4.8, 1.1);
-  buildPlant(M, g, z.cx + 5.8, z.cz + 4.8, 1.1);
-
-  world.decorativeSpots.push(
-    { area: "masjid", x: z.cx - 2.2, z: z.cz - 2, floor: 1, activity: "sholat" },
-    { area: "masjid", x: z.cx + 0.2, z: z.cz - 2, floor: 1, activity: "sholat" },
-    { area: "masjid", x: z.cx - 2.2, z: z.cz + 2, floor: 1, activity: "sholat" },
-    { area: "masjid", x: z.cx + 0.2, z: z.cz + 2, floor: 1, activity: "sholat" }
-  );
-  world.nav.blockRect(z.cx, z.cz - z.d / 2 + 1.2, 2.2, 2.4);
-  world.nav.blockRect(z.cx + 1.6, z.cz - z.d / 2 + 1.2, 0.9, 0.9);
-  world.nav.blockRect(z.cx + 4.5, z.cz + 4, 1.4, 1.4);
-}
-
-/* ------------------------------------------------------------------ */
-/* Zona: Ruang Rapat                                                   */
-/* ------------------------------------------------------------------ */
-
-function buildMeeting(world, parent, M) {
-  const z = ZONES[1].meeting;
-  const g = new THREE.Group();
-  parent.add(g);
-
-  mesh(new THREE.BoxGeometry(z.w, 0.05, z.d), M.rugMat, z.cx, 0.05, z.cz, 0, g, false);
-
-  const table = mesh(cyl(2.6, 2.6, 0.08, 20, 0xd9c3a0), M.vertexMat, z.cx, 0.78, z.cz, 0, g);
-  mesh(cyl(0.16, 0.2, 0.76, 10, 0x644832), M.vertexMat, z.cx, 0.38, z.cz, 0, g, false);
-
-  const seats = [];
-  for (let i = 0; i < 10; i += 1) {
-    const a = (i / 10) * Math.PI * 2;
-    const sx = z.cx + Math.cos(a) * 3.6;
-    const sz = z.cz + Math.sin(a) * 3.0;
-    const c = new THREE.Group();
-    c.position.set(sx, 0, sz);
-    c.rotation.y = -a - Math.PI / 2;
-    g.add(c);
-    mesh(rbox(0.5, 0.06, 0.48, 0x3f4a55, 0.02), M.vertexMat, 0, 0.45, 0, 0, c, false);
-    mesh(rbox(0.5, 0.5, 0.06, 0x3f4a55, 0.02), M.vertexMat, 0, 0.72, -0.22, 0, c, false);
-    seats.push({ x: sx, z: sz });
-  }
-  world.meetingSeats = seats;
-  world.nav.blockRect(z.cx, z.cz, 5.4, 6.2);
-
-  mesh(box(3.2, 1.9, 0.06, 0x1a2530), M.screenMat, z.cx, 1.7, z.cz - z.d / 2 + 0.2, 0, g, false);
-  mesh(box(2.4, 1.4, 0.06, 0xfff9ec), M.vertexMat, z.cx + 4.5, 1.6, z.cz - z.d / 2 + 0.2, 0, g, false);
-  mesh(box(2.2, 0.06, 0.08, 0x4a5560), M.vertexMat, z.cx + 4.5, 1.6, z.cz - z.d / 2 + 0.24, 0, g, false);
-
-  buildHangingLamp(M, g, world, z.cx, z.cz, 2.9);
-  buildPlant(M, g, z.cx - 5.6, z.cz + 4.8, 1.2);
-  buildPlant(M, g, z.cx + 5.6, z.cz + 4.8, 1.2);
-
-  world.decorativeSpots.push(
-    { area: "meeting", x: z.cx - 3.6, z: z.cz, floor: 1, activity: "diskusi" },
-    { area: "meeting", x: z.cx + 3.6, z: z.cz, floor: 1, activity: "diskusi" }
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Zona: Kedai Kopi                                                    */
-/* ------------------------------------------------------------------ */
-
-function buildKopi(world, parent, M) {
-  const z = ZONES[1].kopi;
-  const g = new THREE.Group();
-  parent.add(g);
-
-  mesh(new THREE.BoxGeometry(z.w, 0.05, z.d), M.tileMat, z.cx, 0.05, z.cz, 0, g, false);
-
-  mesh(rbox(7.0, 1.1, 1.0, 0x98633e, 0.04), M.vertexMat, z.cx, 0.55, z.cz - z.d / 2 + 1.2, 0, g);
-  mesh(rbox(7.4, 0.08, 1.3, 0xd9c3a0, 0.03), M.vertexMat, z.cx, 1.14, z.cz - z.d / 2 + 1.2, 0, g);
-  mesh(rbox(0.9, 0.7, 0.6, 0xb9c2c9, 0.04), M.vertexMat, z.cx - 2.2, 1.5, z.cz - z.d / 2 + 1.2, 0, g, false);
-  mesh(box(0.3, 0.3, 0.3, 0x3c454e), M.vertexMat, z.cx - 2.2, 1.3, z.cz - z.d / 2 + 1.0, 0, g, false);
-  mesh(box(2.0, 0.04, 0.3, 0x644832), M.vertexMat, z.cx + 1.5, 1.4, z.cz - z.d / 2 + 1.2, 0, g, false);
-  for (let i = 0; i < 4; i += 1) {
-    mesh(cyl(0.07, 0.06, 0.12, 8, 0xfff9ec), M.vertexMat, z.cx + 0.8 + i * 0.45, 1.48, z.cz - z.d / 2 + 1.2, 0, g, false);
-  }
-
-  mesh(new THREE.PlaneGeometry(3.2, 3.2), M.menuMat, z.cx, 2.2, z.cz - z.d / 2 + 0.12, 0, g, false);
-
-  buildTableSet(M, g, z.cx - 3.2, z.cz + 2.4, 0, 1.4, 1.4, 4, world);
-  buildTableSet(M, g, z.cx + 3.2, z.cz + 2.4, 0, 1.4, 1.4, 4, world);
-  buildTableSet(M, g, z.cx, z.cz + 4.4, 0, 1.4, 1.4, 4, world);
-
-  for (let i = 0; i < 5; i += 1) {
-    const sx = z.cx - 2.6 + i * 1.3;
-    mesh(cyl(0.22, 0.22, 0.44, 10, 0x965c62), M.vertexMat, sx, 0.22, z.cz - z.d / 2 + 2.4, 0, g, false);
-    mesh(cyl(0.03, 0.16, 0.44, 8, 0x644832), M.vertexMat, sx, 0.22, z.cz - z.d / 2 + 2.4, 0, g, false);
-  }
-
-  buildHangingLamp(M, g, world, z.cx - 3.2, z.cz + 2.4, 2.5);
-  buildHangingLamp(M, g, world, z.cx + 3.2, z.cz + 2.4, 2.5);
-  buildHangingLamp(M, g, world, z.cx, z.cz + 4.4, 2.5);
-  buildHangingLamp(M, g, world, z.cx, z.cz - z.d / 2 + 2.0, 2.4);
-
-  buildPlant(M, g, z.cx - 6.0, z.cz + 5.0, 1.1);
-  buildPlant(M, g, z.cx + 6.0, z.cz + 5.0, 1.1);
-  buildPlant(M, g, z.cx + 6.0, z.cz - 5.0, 1.1);
-
-  world.decorativeSpots.push(
-    { area: "kopi", x: z.cx - 3.2, z: z.cz + 2.4, floor: 1, activity: "ngopi" },
-    { area: "kopi", x: z.cx + 3.2, z: z.cz + 2.4, floor: 1, activity: "ngopi" },
-    { area: "kopi", x: z.cx, z: z.cz + 4.4, floor: 1, activity: "ngopi" },
-    { area: "kopi", x: z.cx - 1.3, z: z.cz - z.d / 2 + 2.4, floor: 1, activity: "ngopi" }
-  );
-  world.nav.blockRect(z.cx, z.cz - z.d / 2 + 1.2, 7.4, 1.4);
-}
-
-/* ------------------------------------------------------------------ */
-/* Zona: Studio Konten                                                 */
-/* ------------------------------------------------------------------ */
-
-function buildStudio(world, parent, M) {
-  const z = ZONES[1].studio;
-  const g = new THREE.Group();
-  parent.add(g);
-
-  mesh(new THREE.BoxGeometry(z.w, 0.05, z.d), M.carpetMat, z.cx, 0.05, z.cz, 0, g, false);
-
-  mesh(box(5.0, 3.0, 0.1, 0x2f7a4a), M.vertexMat, z.cx, 1.5, z.cz - z.d / 2 + 0.4, 0, g, false);
-  mesh(box(5.4, 0.1, 0.4, 0x3c454e), M.vertexMat, z.cx, 3.0, z.cz - z.d / 2 + 0.4, 0, g, false);
-
-  for (const dx of [-2.4, 2.4]) {
-    mesh(cyl(0.03, 0.03, 1.1, 6, 0x3c454e), M.vertexMat, z.cx + dx, 0.55, z.cz - 1.0, 0, g, false);
-    mesh(box(0.5, 0.34, 0.4, 0x2b323a), M.vertexMat, z.cx + dx, 1.25, z.cz - 1.0, 0, g, false);
-    mesh(cyl(0.05, 0.05, 0.3, 8, 0x4a5560), M.vertexMat, z.cx + dx, 1.25, z.cz - 0.7, 0, g, false);
-    for (let i = 0; i < 3; i += 1) {
-      const a = (i / 3) * Math.PI * 2;
-      mesh(cyl(0.02, 0.02, 0.9, 5, 0x3c454e), M.vertexMat, z.cx + dx + Math.cos(a) * 0.24, 0.45, z.cz - 1.0 + Math.sin(a) * 0.24, 0, g, false);
-    }
-  }
-
-  mesh(cyl(0.5, 0.5, 0.06, 16, 0xfff2cf), M.ledMat, z.cx, 2.0, z.cz + 0.6, 0, g, false);
-  mesh(cyl(0.03, 0.03, 2.0, 6, 0x3c454e), M.vertexMat, z.cx, 1.0, z.cz + 0.6, 0, g, false);
-
-  buildDeskCluster(M, g, z.cx - 4.0, z.cz + 3.6, Math.PI / 2, world);
-  buildDeskCluster(M, g, z.cx - 4.0, z.cz + 1.4, Math.PI / 2, world);
-
-  buildShelf(M, g, z.cx + 5.2, z.cz + 4.5, Math.PI / 2, 2.2, world);
-
-  buildHangingLamp(M, g, world, z.cx, z.cz, 2.8);
-  buildPlant(M, g, z.cx + 5.6, z.cz - 5.4, 1.0);
-
-  world.decorativeSpots.push(
-    { area: "studio", x: z.cx, z: z.cz + 0.6, floor: 1, activity: "baca" },
-    { area: "studio", x: z.cx + 5.2, z: z.cz + 4.5, floor: 1, activity: "diskusi" }
-  );
-  world.nav.blockRect(z.cx, z.cz - z.d / 2 + 0.4, 5.4, 0.4);
-  world.nav.blockRect(z.cx, z.cz - 1.0, 5.6, 1.0);
-}
-
-/* ------------------------------------------------------------------ */
-/* Zona: Ruang Klien & Review                                          */
+/* Zona: Client Lounge — lounge klien modern                           */
 /* ------------------------------------------------------------------ */
 
 function buildClient(world, parent, M) {
@@ -1079,30 +1181,35 @@ function buildClient(world, parent, M) {
   const g = new THREE.Group();
   parent.add(g);
 
-  mesh(new THREE.BoxGeometry(z.w, 0.05, z.d), M.rugMat, z.cx, 0.05, z.cz, 0, g, false);
+  mesh(new THREE.BoxGeometry(z.w, 0.04, z.d), M.rugMat, z.cx, 0.04, z.cz, 0, g, false);
 
   buildTableSet(M, g, z.cx, z.cz, 0, 2.4, 1.3, 6, world);
-  mesh(rbox(2.8, 0.5, 0.9, 0x965c62, 0.06), M.vertexMat, z.cx, 0.3, z.cz + 3.6, 0, g);
-  mesh(rbox(2.8, 0.7, 0.24, 0x965c62, 0.06), M.vertexMat, z.cx, 0.72, z.cz + 3.95, 0, g);
+  buildSofaSet(M, g, z.cx, z.cz + 4.5, Math.PI, 0xd4c8b8);
+  buildSofaSet(M, g, z.cx - 5.0, z.cz, Math.PI / 2, 0xa8c8a8);
 
-  buildShelf(M, g, z.cx + 5.6, z.cz, Math.PI / 2, 3.0, world);
-  buildShelf(M, g, z.cx - 5.6, z.cz, Math.PI / 2, 3.0, world);
+  buildShelf(M, g, z.cx + 6.0, z.cz, Math.PI / 2, 3.0, world);
+  buildShelf(M, g, z.cx - 6.0, z.cz, Math.PI / 2, 3.0, world);
 
-  mesh(box(3.0, 1.8, 0.06, 0x1a2530), M.screenMat, z.cx, 1.8, z.cz - z.d / 2 + 0.2, 0, g, false);
+  mesh(box(3.0, 1.7, 0.05, 0x1a2530), M.screenMat, z.cx, 1.7, z.cz - z.d / 2 + 0.2, 0, g, false);
+  mesh(box(2.4, 0.5, 0.4, 0xf5efe6), M.vertexMat, z.cx, 0.25, z.cz - z.d / 2 + 0.2, 0, g, false);
 
-  buildHangingLamp(M, g, world, z.cx, z.cz, 2.8);
-  buildPlant(M, g, z.cx - 5.6, z.cz + 5.6, 1.2);
-  buildPlant(M, g, z.cx + 5.6, z.cz + 5.6, 1.2);
+  mesh(new THREE.PlaneGeometry(2.4, 1.6), M.artMat, z.cx + 6.8, 1.8, z.cz, -Math.PI / 2, g, false);
+
+  buildLinearLight(M, g, world, z.cx, z.cz, 3.0, 3.0);
+  buildPlant(M, g, z.cx - 6.0, z.cz + 5.5, 1.1);
+  buildPlant(M, g, z.cx + 6.0, z.cz + 5.5, 1.1);
+
+  buildZoneGlassWalls(world, z, ["n", "w", "s"], "w");
 
   world.decorativeSpots.push(
     { area: "client", x: z.cx, z: z.cz + 2.4, floor: 1, activity: "diskusi" },
-    { area: "client", x: z.cx - 5.6, z: z.cz, floor: 1, activity: "baca" },
-    { area: "client", x: z.cx + 5.6, z: z.cz, floor: 1, activity: "baca" }
+    { area: "client", x: z.cx - 6.0, z: z.cz, floor: 1, activity: "baca" },
+    { area: "client", x: z.cx + 6.0, z: z.cz, floor: 1, activity: "baca" }
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Zona: Gym Mini                                                      */
+/* Zona: Fitness Center — gym modern                                   */
 /* ------------------------------------------------------------------ */
 
 function buildGym(world, parent, M) {
@@ -1110,52 +1217,56 @@ function buildGym(world, parent, M) {
   const g = new THREE.Group();
   parent.add(g);
 
-  mesh(new THREE.BoxGeometry(z.w, 0.06, z.d), M.rubberMat, z.cx, 0.06, z.cz, 0, g, false);
+  mesh(new THREE.BoxGeometry(z.w, 0.05, z.d), M.rubberMat, z.cx, 0.05, z.cz, 0, g, false);
 
   for (let i = 0; i < 3; i += 1) {
     const tx = z.cx - 4.5 + i * 2.2;
-    mesh(rbox(0.9, 0.12, 2.0, 0x3c454e, 0.03), M.vertexMat, tx, 0.3, z.cz - 3.0, 0, g);
-    mesh(rbox(0.8, 0.06, 1.8, 0x5c6670, 0.02), M.vertexMat, tx, 0.4, z.cz - 3.0, 0, g, false);
-    mesh(cyl(0.05, 0.05, 1.2, 8, 0xb9c2c9), M.vertexMat, tx - 0.4, 0.9, z.cz - 3.9, 0.3, g, false);
-    mesh(cyl(0.05, 0.05, 1.2, 8, 0xb9c2c9), M.vertexMat, tx + 0.4, 0.9, z.cz - 3.9, 0.3, g, false);
-    mesh(box(0.5, 0.4, 0.1, 0x1a2530), M.screenMat, tx, 1.35, z.cz - 3.95, 0.3, g, false);
+    mesh(rbox(0.8, 0.1, 1.9, 0x3a3a3a, 0.03), M.vertexMat, tx, 0.25, z.cz - 2.0, 0, g);
+    mesh(rbox(0.7, 0.05, 1.7, 0x5a5a5a, 0.02), M.vertexMat, tx, 0.32, z.cz - 2.0, 0, g, false);
+    mesh(cyl(0.04, 0.04, 1.1, 8, 0xb8b8b8), M.vertexMat, tx - 0.35, 0.8, z.cz - 2.8, 0.3, g, false);
+    mesh(cyl(0.04, 0.04, 1.1, 8, 0xb8b8b8), M.vertexMat, tx + 0.35, 0.8, z.cz - 2.8, 0.3, g, false);
+    mesh(box(0.45, 0.35, 0.08, 0x1a2530), M.screenMat, tx, 1.2, z.cz - 2.85, 0.3, g, false);
   }
 
-  mesh(rbox(0.5, 0.12, 1.6, 0x965c62, 0.03), M.vertexMat, z.cx + 3.5, 0.5, z.cz - 2.5, 0, g);
-  mesh(cyl(0.04, 0.04, 2.2, 8, 0xb9c2c9), M.vertexMat, z.cx + 3.5, 1.0, z.cz - 2.5, Math.PI / 2, g, false);
-  for (const dx of [-1.0, 1.0]) {
-    mesh(cyl(0.16, 0.16, 0.06, 12, 0x3c454e), M.vertexMat, z.cx + 3.5 + dx, 1.0, z.cz - 2.5, Math.PI / 2, g, false);
+  mesh(rbox(0.45, 0.1, 1.5, 0x3a3a3a, 0.03), M.vertexMat, z.cx + 3.5, 0.45, z.cz - 1.5, 0, g);
+  mesh(cyl(0.035, 0.035, 2.0, 8, 0xb8b8b8), M.vertexMat, z.cx + 3.5, 0.9, z.cz - 1.5, Math.PI / 2, g, false);
+  for (const dx of [-0.9, 0.9]) {
+    mesh(cyl(0.14, 0.14, 0.05, 12, 0x2d2d2d), M.vertexMat, z.cx + 3.5 + dx, 0.9, z.cz - 1.5, Math.PI / 2, g, false);
   }
 
-  mesh(box(2.0, 0.5, 0.5, 0x3c454e), M.vertexMat, z.cx - 3.5, 0.25, z.cz + 3.5, 0, g);
+  mesh(box(1.8, 0.4, 0.4, 0x3a3a3a), M.vertexMat, z.cx - 3.5, 0.2, z.cz + 2.5, 0, g);
   for (let i = 0; i < 5; i += 1) {
-    const dx = z.cx - 4.2 + i * 0.35;
-    mesh(cyl(0.05, 0.05, 0.3, 8, 0xb9c2c9), M.vertexMat, dx, 0.6, z.cz + 3.5, 0, g, false);
-    mesh(cyl(0.09, 0.09, 0.08, 10, 0x2b323a), M.vertexMat, dx, 0.6, z.cz + 3.5 - 0.12, 0, g, false);
-    mesh(cyl(0.09, 0.09, 0.08, 10, 0x2b323a), M.vertexMat, dx, 0.6, z.cz + 3.5 + 0.12, 0, g, false);
+    const dx = z.cx - 4.1 + i * 0.3;
+    mesh(cyl(0.04, 0.04, 0.25, 8, 0xb8b8b8), M.vertexMat, dx, 0.5, z.cz + 2.5, 0, g, false);
+    mesh(cyl(0.08, 0.08, 0.06, 10, 0x2d2d2d), M.vertexMat, dx, 0.5, z.cz + 2.5 - 0.1, 0, g, false);
+    mesh(cyl(0.08, 0.08, 0.06, 10, 0x2d2d2d), M.vertexMat, dx, 0.5, z.cz + 2.5 + 0.1, 0, g, false);
   }
 
-  mesh(box(5.0, 2.2, 0.06, 0xbfe6ea), M.glassMat, z.cx, 1.3, z.cz + z.d / 2 - 0.15, 0, g, false);
+  mesh(box(5.0, 2.2, 0.05, 0xd8ecf4), M.glassMat, z.cx, 1.3, z.cz + z.d / 2 - 0.15, 0, g, false);
 
   for (let i = 0; i < 3; i += 1) {
-    mesh(rbox(0.7, 0.05, 1.8, 0x78a9c5, 0.02), M.vertexMat, z.cx + 3.5 + i * 0.9, 0.1, z.cz + 1.5, 0, g, false);
+    mesh(rbox(0.6, 0.03, 1.7, 0x5a9fd4, 0.02), M.vertexMat, z.cx + 3.5 + i * 0.8, 0.08, z.cz + 1.5, 0, g, false);
   }
 
-  buildPlant(M, g, z.cx - 6.0, z.cz + 5.0, 1.0);
+  buildPlant(M, g, z.cx - 6.0, z.cz + 3.0, 1.0);
+
+  buildLinearLight(M, g, world, z.cx, z.cz, 3.0, 3.0);
+
+  buildZoneGlassWalls(world, z, ["n", "e"], "n");
 
   world.decorativeSpots.push(
-    { area: "gym", x: z.cx - 4.5, z: z.cz - 2.0, floor: 1, activity: "olahraga" },
-    { area: "gym", x: z.cx - 2.3, z: z.cz - 2.0, floor: 1, activity: "olahraga" },
-    { area: "gym", x: z.cx + 3.5, z: z.cz - 1.5, floor: 1, activity: "olahraga" },
+    { area: "gym", x: z.cx - 4.5, z: z.cz - 1.0, floor: 1, activity: "olahraga" },
+    { area: "gym", x: z.cx - 2.3, z: z.cz - 1.0, floor: 1, activity: "olahraga" },
+    { area: "gym", x: z.cx + 3.5, z: z.cz - 0.5, floor: 1, activity: "olahraga" },
     { area: "gym", x: z.cx + 3.5, z: z.cz + 1.5, floor: 1, activity: "olahraga" }
   );
-  world.nav.blockRect(z.cx - 4.5, z.cz - 3.0, 6.6, 2.4);
-  world.nav.blockRect(z.cx + 3.5, z.cz - 2.5, 2.6, 2.0);
-  world.nav.blockRect(z.cx - 3.5, z.cz + 3.5, 2.4, 0.8);
+  world.nav.blockRect(z.cx - 4.5, z.cz - 2.0, 6.6, 2.2);
+  world.nav.blockRect(z.cx + 3.5, z.cz - 1.5, 2.4, 1.8);
+  world.nav.blockRect(z.cx - 3.5, z.cz + 2.5, 2.2, 0.7);
 }
 
 /* ------------------------------------------------------------------ */
-/* Zona: Lounge & Taman                                                */
+/* Zona: Lounge & Garden — lounge taman modern                          */
 /* ------------------------------------------------------------------ */
 
 function buildLounge(world, parent, M) {
@@ -1163,41 +1274,44 @@ function buildLounge(world, parent, M) {
   const g = new THREE.Group();
   parent.add(g);
 
-  mesh(new THREE.BoxGeometry(z.w, 0.05, z.d), M.rugMat, z.cx, 0.05, z.cz, 0, g, false);
+  mesh(new THREE.BoxGeometry(z.w, 0.04, z.d), M.rugMat, z.cx, 0.04, z.cz, 0, g, false);
 
-  buildSofaSet(M, g, z.cx - 2.0, z.cz - 2.4, 0);
-  buildSofaSet(M, g, z.cx + 2.0, z.cz - 2.4, 0);
-  buildSofaSet(M, g, z.cx, z.cz + 2.6, Math.PI);
+  buildSofaSet(M, g, z.cx - 2.5, z.cz - 1.5, 0, 0xd4c8b8);
+  buildSofaSet(M, g, z.cx + 2.5, z.cz - 1.5, 0, 0xa8c8a8);
+  buildSofaSet(M, g, z.cx, z.cz + 2.0, Math.PI, 0xd88a6a);
 
-  mesh(cyl(0.7, 0.7, 0.06, 16, 0xd9c3a0), M.vertexMat, z.cx, 0.42, z.cz, 0, g);
-  mesh(cyl(0.1, 0.14, 0.4, 10, 0x644832), M.vertexMat, z.cx, 0.2, z.cz, 0, g, false);
+  mesh(cyl(0.65, 0.65, 0.05, 16, 0xf5efe6), M.vertexMat, z.cx, 0.4, z.cz, 0, g);
+  mesh(cyl(0.08, 0.12, 0.38, 10, 0x2d2d2d), M.vertexMat, z.cx, 0.19, z.cz, 0, g, false);
 
-  mesh(box(2.6, 1.5, 0.08, 0x1a2530), M.screenMat, z.cx, 1.8, z.cz - z.d / 2 + 0.25, 0, g, false);
-  mesh(box(0.4, 0.5, 0.2, 0x3c454e), M.vertexMat, z.cx, 0.5, z.cz - z.d / 2 + 0.25, 0, g, false);
+  mesh(box(2.6, 1.4, 0.05, 0x1a2530), M.screenMat, z.cx, 1.6, z.cz - z.d / 2 + 0.2, 0, g, false);
+  mesh(box(2.0, 0.45, 0.35, 0xf5efe6), M.vertexMat, z.cx, 0.225, z.cz - z.d / 2 + 0.2, 0, g, false);
 
-  for (let i = 0; i < 6; i += 1) {
-    buildPlant(M, g, z.cx - 5.5 + (i % 3) * 2.0, z.cz + 4.6 + Math.floor(i / 3) * 1.2, 0.9 + (i % 3) * 0.15);
-  }
-  mesh(cyl(1.2, 1.2, 0.36, 16, 0x7fc4d4), M.vertexMat, z.cx + 5.0, 0.18, z.cz + 3.4, 0, g);
-  mesh(sph(1.05, 14, 8, 0x4fb3cf), M.waterMat, z.cx + 5.0, 0.34, z.cz + 3.4, 0, g, false);
+  mesh(cyl(1.4, 1.4, 0.4, 20, 0xe8e4dc), M.vertexMat, z.cx + 5.5, 0.2, z.cz + 2.0, 0, g);
+  mesh(sph(1.25, 16, 8, 0x4fb3cf), M.waterMat, z.cx + 5.5, 0.36, z.cz + 2.0, 0, g, false);
   world.waterMaterials.push(M.waterMat);
 
-  buildHangingLamp(M, g, world, z.cx, z.cz, 2.8);
-  buildHangingLamp(M, g, world, z.cx - 2.0, z.cz - 2.4, 2.6);
-  buildHangingLamp(M, g, world, z.cx + 2.0, z.cz - 2.4, 2.6);
+  for (let i = 0; i < 6; i += 1) {
+    buildPlant(M, g, z.cx - 6.0 + (i % 3) * 2.2, z.cz + 3.0 + Math.floor(i / 3) * 1.0, 0.9 + (i % 3) * 0.15);
+  }
+  buildPlant(M, g, z.cx - 6.0, z.cz - 3.0, 1.2);
+  buildPlant(M, g, z.cx + 6.0, z.cz - 3.0, 1.2);
+
+  buildLinearLight(M, g, world, z.cx, z.cz, 3.0, 3.0);
+  buildLinearLight(M, g, world, z.cx - 2.5, z.cz - 1.5, 2.6, 2.0);
+  buildLinearLight(M, g, world, z.cx + 2.5, z.cz - 1.5, 2.6, 2.0);
 
   world.decorativeSpots.push(
-    { area: "lounge", x: z.cx - 2.0, z: z.cz - 2.4, floor: 1, activity: "nonton" },
-    { area: "lounge", x: z.cx + 2.0, z: z.cz - 2.4, floor: 1, activity: "nonton" },
-    { area: "lounge", x: z.cx, z: z.cz + 2.6, floor: 1, activity: "santai" },
-    { area: "lounge", x: z.cx + 5.0, z: z.cz + 3.4, floor: 1, activity: "renang" }
+    { area: "lounge", x: z.cx - 2.5, z: z.cz - 1.5, floor: 1, activity: "nonton" },
+    { area: "lounge", x: z.cx + 2.5, z: z.cz - 1.5, floor: 1, activity: "nonton" },
+    { area: "lounge", x: z.cx, z: z.cz + 2.0, floor: 1, activity: "santai" },
+    { area: "lounge", x: z.cx + 5.5, z: z.cz + 2.0, floor: 1, activity: "renang" }
   );
-  world.nav.blockRect(z.cx, z.cz, 2.0, 2.0);
-  world.nav.blockRect(z.cx + 5.0, z.cz + 3.4, 2.4, 2.4);
+  world.nav.blockRect(z.cx, z.cz, 1.8, 1.8);
+  world.nav.blockRect(z.cx + 5.5, z.cz + 2.0, 2.8, 2.8);
 }
 
 /* ------------------------------------------------------------------ */
-/* Zona: Pantry & Dapur                                                */
+/* Zona: Pantry & Kitchen — dapur modern                               */
 /* ------------------------------------------------------------------ */
 
 function buildPantry(world, parent, M) {
@@ -1205,40 +1319,42 @@ function buildPantry(world, parent, M) {
   const g = new THREE.Group();
   parent.add(g);
 
-  mesh(new THREE.BoxGeometry(z.w, 0.05, z.d), M.tileMat, z.cx, 0.05, z.cz, 0, g, false);
+  mesh(new THREE.BoxGeometry(z.w, 0.04, z.d), M.tileMat, z.cx, 0.04, z.cz, 0, g, false);
 
-  mesh(rbox(6.5, 1.0, 1.0, 0x98633e, 0.04), M.vertexMat, z.cx, 0.5, z.cz - z.d / 2 + 1.2, 0, g);
-  mesh(rbox(6.9, 0.08, 1.2, 0xd9c3a0, 0.03), M.vertexMat, z.cx, 1.04, z.cz - z.d / 2 + 1.2, 0, g);
-  mesh(box(0.8, 0.06, 0.6, 0x3c454e), M.vertexMat, z.cx - 2.2, 1.1, z.cz - z.d / 2 + 1.2, 0, g, false);
-  mesh(cyl(0.28, 0.22, 0.16, 12, 0xb9c2c9), M.vertexMat, z.cx + 2.2, 1.1, z.cz - z.d / 2 + 1.2, 0, g, false);
-  mesh(cyl(0.28, 0.24, 0.36, 12, 0xfff9ec), M.vertexMat, z.cx + 3.4, 1.26, z.cz - z.d / 2 + 1.2, 0, g, false);
-  mesh(cyl(0.26, 0.26, 0.55, 12, 0x9fd8da), M.vertexMat, z.cx + 4.5, 0.28, z.cz - z.d / 2 + 2.2, 0, g, false);
+  mesh(rbox(6.0, 0.95, 0.9, 0xf5efe6, 0.04), M.vertexMat, z.cx, 0.475, z.cz - z.d / 2 + 1.2, 0, g);
+  mesh(rbox(6.4, 0.05, 1.1, 0xe8ddd0, 0.03), M.vertexMat, z.cx, 0.98, z.cz - z.d / 2 + 1.2, 0, g);
+  mesh(box(0.7, 0.05, 0.5, 0xb8b8b8), M.vertexMat, z.cx - 2.0, 1.02, z.cz - z.d / 2 + 1.2, 0, g, false);
+  mesh(cyl(0.25, 0.2, 0.14, 12, 0xb8b8b8), M.vertexMat, z.cx + 2.0, 1.05, z.cz - z.d / 2 + 1.2, 0, g, false);
+  mesh(cyl(0.25, 0.27, 0.32, 12, 0xf8f6f2), M.vertexMat, z.cx + 3.2, 1.18, z.cz - z.d / 2 + 1.2, 0, g, false);
+  mesh(cyl(0.23, 0.23, 0.5, 12, 0x9fd8da), M.vertexMat, z.cx + 4.5, 0.25, z.cz - z.d / 2 + 2.0, 0, g, false);
 
-  mesh(rbox(0.9, 2.0, 0.8, 0xb9c2c9, 0.05), M.vertexMat, z.cx - 5.6, 1.0, z.cz - z.d / 2 + 1.4, 0, g);
-  mesh(box(0.06, 0.5, 0.06, 0x644832), M.vertexMat, z.cx - 5.2, 1.2, z.cz - z.d / 2 + 1.0, 0, g, false);
+  mesh(rbox(0.85, 1.9, 0.75, 0xb8b8b8, 0.04), M.vertexMat, z.cx - 5.5, 0.95, z.cz - z.d / 2 + 1.4, 0, g);
+  mesh(box(0.05, 0.4, 0.05, 0x2d2d2d), M.vertexMat, z.cx - 5.1, 1.1, z.cz - z.d / 2 + 1.0, 0, g, false);
 
-  buildTableSet(M, g, z.cx - 2.5, z.cz + 2.6, 0, 1.8, 1.0, 4, world);
-  buildTableSet(M, g, z.cx + 2.5, z.cz + 2.6, 0, 1.8, 1.0, 4, world);
-  buildTableSet(M, g, z.cx, z.cz + 4.8, 0, 1.8, 1.0, 4, world);
+  buildTableSet(M, g, z.cx - 2.5, z.cz + 2.2, 0, 1.8, 1.0, 4, world);
+  buildTableSet(M, g, z.cx + 2.5, z.cz + 2.2, 0, 1.8, 1.0, 4, world);
+  buildTableSet(M, g, z.cx, z.cz + 3.8, 0, 1.8, 1.0, 4, world);
 
-  buildHangingLamp(M, g, world, z.cx - 2.5, z.cz + 2.6, 2.5);
-  buildHangingLamp(M, g, world, z.cx + 2.5, z.cz + 2.6, 2.5);
-  buildHangingLamp(M, g, world, z.cx, z.cz + 4.8, 2.5);
+  buildLinearLight(M, g, world, z.cx - 2.5, z.cz + 2.2, 2.6, 2.0);
+  buildLinearLight(M, g, world, z.cx + 2.5, z.cz + 2.2, 2.6, 2.0);
+  buildLinearLight(M, g, world, z.cx, z.cz + 3.8, 2.6, 2.0);
 
-  buildPlant(M, g, z.cx + 6.0, z.cz - 5.0, 1.0);
+  buildPlant(M, g, z.cx + 6.0, z.cz - 3.0, 1.0);
+
+  buildZoneGlassWalls(world, z, ["n", "w"], "n");
 
   world.decorativeSpots.push(
-    { area: "pantry", x: z.cx - 2.5, z: z.cz + 2.6, floor: 1, activity: "makan" },
-    { area: "pantry", x: z.cx + 2.5, z: z.cz + 2.6, floor: 1, activity: "makan" },
-    { area: "pantry", x: z.cx, z: z.cz + 4.8, floor: 1, activity: "makan" },
-    { area: "pantry", x: z.cx + 4.5, z: z.cz - z.d / 2 + 2.2, floor: 1, activity: "ngopi" }
+    { area: "pantry", x: z.cx - 2.5, z: z.cz + 2.2, floor: 1, activity: "makan" },
+    { area: "pantry", x: z.cx + 2.5, z: z.cz + 2.2, floor: 1, activity: "makan" },
+    { area: "pantry", x: z.cx, z: z.cz + 3.8, floor: 1, activity: "makan" },
+    { area: "pantry", x: z.cx + 4.5, z: z.cz - z.d / 2 + 2.0, floor: 1, activity: "ngopi" }
   );
-  world.nav.blockRect(z.cx, z.cz - z.d / 2 + 1.2, 6.9, 1.4);
-  world.nav.blockRect(z.cx - 5.6, z.cz - z.d / 2 + 1.4, 1.1, 1.0);
+  world.nav.blockRect(z.cx, z.cz - z.d / 2 + 1.2, 6.4, 1.3);
+  world.nav.blockRect(z.cx - 5.5, z.cz - z.d / 2 + 1.4, 1.0, 0.9);
 }
 
 /* ------------------------------------------------------------------ */
-/* Eksterior — taman, jalan, pohon, lampu, gerbang, bendera           */
+/* Eksterior — taman modern, pohon, lampu, entrance                   */
 /* ------------------------------------------------------------------ */
 
 function buildExterior(world, parent, M) {
@@ -1246,80 +1362,75 @@ function buildExterior(world, parent, M) {
   const g = new THREE.Group();
   parent.add(g);
 
-  const ground = mesh(new THREE.BoxGeometry(100, 0.2, 90), M.grassMat, 0, -0.2, 0, 0, g, false);
+  const ground = mesh(new THREE.BoxGeometry(110, 0.2, 100), M.grassMat, 0, -0.2, 0, 0, g, false);
   ground.receiveShadow = true;
 
-  mesh(new THREE.BoxGeometry(100, 0.12, 8), M.concreteMat, 0, -0.02, W.maxZ + 12, 0, g, false);
-  mesh(new THREE.BoxGeometry(0.14, 0.14, 8), M.ledMat, 0, 0.06, W.maxZ + 12, 0, g, false);
-  mesh(new THREE.BoxGeometry(100, 0.16, 2.4), M.tileMat, 0, 0.0, W.maxZ + 7.4, 0, g, false);
+  mesh(new THREE.BoxGeometry(110, 0.1, 8), M.concreteMat, 0, -0.02, W.maxZ + 12, 0, g, false);
+  mesh(new THREE.BoxGeometry(0.12, 0.12, 8), M.ledMat, 0, 0.06, W.maxZ + 12, 0, g, false);
+  mesh(new THREE.BoxGeometry(110, 0.14, 2.2), M.tileMat, 0, 0.0, W.maxZ + 7.2, 0, g, false);
 
-  // Pagar + gerbang
-  const fenceGeo = new THREE.BoxGeometry(0.12, 1.4, 0.12);
-  paint(fenceGeo, 0x4a5560);
+  const fenceGeo = new THREE.BoxGeometry(0.1, 0.9, 0.1);
+  paint(fenceGeo, 0x2d2d2d);
   const fence = new InstancePool(M.vertexMat, fenceGeo);
-  for (let x = W.minX - 6; x <= W.maxX + 6; x += 2) {
-    if (Math.abs(x) < 4) continue;
-    fence.add(x, 0.7, W.maxZ + 5.6, 0, 1, 1, 1);
+  for (let x = W.minX - 8; x <= W.maxX + 8; x += 2) {
+    if (Math.abs(x) < 5) continue;
+    fence.add(x, 0.45, W.maxZ + 5.2, 0, 1, 1, 1);
   }
   fence.build(g, { castShadow: false, receiveShadow: false });
-  mesh(box(0.16, 1.5, 0.16, 0x3c454e), M.vertexMat, -4, 0.75, W.maxZ + 5.6, 0, g);
-  mesh(box(0.16, 1.5, 0.16, 0x3c454e), M.vertexMat, 4, 0.75, W.maxZ + 5.6, 0, g);
-  mesh(box(8.0, 0.12, 0.12, 0x4a5560), M.vertexMat, 0, 1.5, W.maxZ + 5.6, 0, g, false);
+  mesh(box(0.14, 1.0, 0.14, 0x2d2d2d), M.vertexMat, -5, 0.5, W.maxZ + 5.2, 0, g);
+  mesh(box(0.14, 1.0, 0.14, 0x2d2d2d), M.vertexMat, 5, 0.5, W.maxZ + 5.2, 0, g);
+  mesh(box(10.0, 0.1, 0.1, 0x2d2d2d), M.vertexMat, 0, 1.0, W.maxZ + 5.2, 0, g, false);
 
-  // Pohon (instanced)
-  const treeTrunk = new InstancePool(M.vertexMat, cyl(0.22, 0.3, 2.2, 8, 0x8a5a3b));
-  const treeLeaf1 = new InstancePool(M.vertexMat, sph(1.5, 10, 8, 0x4e8d57));
-  const treeLeaf2 = new InstancePool(M.vertexMat, sph(1.1, 10, 8, 0x5c9d63));
-  const treeLeaf3 = new InstancePool(M.vertexMat, sph(0.9, 10, 8, 0x3f7a4c));
+  const treeTrunk = new InstancePool(M.vertexMat, cyl(0.2, 0.28, 2.4, 8, 0x8a6a4a));
+  const treeLeaf1 = new InstancePool(M.vertexMat, sph(1.6, 10, 8, 0x4e9d57));
+  const treeLeaf2 = new InstancePool(M.vertexMat, sph(1.2, 10, 8, 0x5cae63));
+  const treeLeaf3 = new InstancePool(M.vertexMat, sph(0.9, 10, 8, 0x3f8a4c));
   const treeSpots = [
-    [-36, -26], [-22, -28], [4, -28], [20, -27], [34, -24],
-    [-38, 0], [38, 2], [-36, 24], [10, 28], [28, 26], [-12, 29]
+    [-40, -30], [-24, -32], [4, -32], [22, -30], [38, -26],
+    [-42, 0], [42, 2], [-40, 28], [12, 32], [32, 30], [-14, 33]
   ];
   for (const [tx, tz] of treeSpots) {
-    treeTrunk.add(tx, 1.1, tz);
-    treeLeaf1.add(tx, 2.9, tz);
-    treeLeaf2.add(tx + 0.6, 3.6, tz + 0.4);
-    treeLeaf3.add(tx - 0.7, 3.4, tz - 0.5);
+    treeTrunk.add(tx, 1.2, tz);
+    treeLeaf1.add(tx, 3.2, tz);
+    treeLeaf2.add(tx + 0.7, 4.0, tz + 0.4);
+    treeLeaf3.add(tx - 0.8, 3.8, tz - 0.5);
   }
   treeTrunk.build(g, { castShadow: true, receiveShadow: false });
   treeLeaf1.build(g, { castShadow: false, receiveShadow: false });
   treeLeaf2.build(g, { castShadow: false, receiveShadow: false });
   treeLeaf3.build(g, { castShadow: false, receiveShadow: false });
 
-  // Lampu jalan
-  const lampGeo = new THREE.CylinderGeometry(0.08, 0.12, 3.4, 8);
-  paint(lampGeo, 0x3c454e);
-  const lampHead = new THREE.SphereGeometry(0.22, 8, 6);
+  const lampGeo = new THREE.CylinderGeometry(0.07, 0.1, 3.2, 8);
+  paint(lampGeo, 0x2d2d2d);
+  const lampHead = new THREE.SphereGeometry(0.2, 8, 6);
   paint(lampHead, 0xfff2cf);
   const pole = new InstancePool(M.vertexMat, lampGeo);
   const head = new InstancePool(M.ledMat, lampHead);
-  for (let x = -30; x <= 30; x += 12) {
-    pole.add(x, 1.7, W.maxZ + 9.5, 0, 1, 1, 1);
-    head.add(x, 3.5, W.maxZ + 9.5, 0, 1, 1, 1);
+  for (let x = -32; x <= 32; x += 12) {
+    pole.add(x, 1.6, W.maxZ + 9.0, 0, 1, 1, 1);
+    head.add(x, 3.3, W.maxZ + 9.0, 0, 1, 1, 1);
   }
   pole.build(g, { castShadow: false, receiveShadow: false });
   head.build(g, { castShadow: false, receiveShadow: false });
 
-  // Bendera Merah Putih
-  for (const bx of [-6, 6]) {
-    mesh(cyl(0.06, 0.08, 6.5, 8, 0xb9c2c9), M.vertexMat, bx, 3.25, W.maxZ + 5.0, 0, g);
+  for (const bx of [-7, 7]) {
+    mesh(cyl(0.05, 0.07, 6.0, 8, 0xb8b8b8), M.vertexMat, bx, 3.0, W.maxZ + 4.6, 0, g);
     const flag = new THREE.Group();
-    flag.position.set(bx + 0.7, 5.9, W.maxZ + 5.0);
+    flag.position.set(bx + 0.65, 5.4, W.maxZ + 4.6);
     g.add(flag);
-    const redMat = new THREE.MeshStandardMaterial({ color: 0xb72d38, roughness: 0.8, side: THREE.DoubleSide });
-    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xfff9ec, roughness: 0.8, side: THREE.DoubleSide });
-    const red = mesh(new THREE.BoxGeometry(1.4, 0.45, 0.02), redMat, 0.7, 0, 0, 0, flag, false);
-    const white = mesh(new THREE.BoxGeometry(1.4, 0.45, 0.02), whiteMat, 0.7, -0.45, 0, 0, flag, false);
+    const redMat = new THREE.MeshStandardMaterial({ color: 0xe05a4e, roughness: 0.8, side: THREE.DoubleSide });
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf8f6f2, roughness: 0.8, side: THREE.DoubleSide });
+    const red = mesh(new THREE.BoxGeometry(1.3, 0.42, 0.02), redMat, 0.65, 0, 0, 0, flag, false);
+    const white = mesh(new THREE.BoxGeometry(1.3, 0.42, 0.02), whiteMat, 0.65, -0.42, 0, 0, flag, false);
     world.flagCloths.push(red, white);
   }
 
-  // Bangku & pot di trotoar
-  for (const bx of [-10, 10]) {
-    mesh(rbox(1.6, 0.1, 0.5, 0x98633e, 0.02), M.vertexMat, bx, 0.45, W.maxZ + 7.2, 0, g, false);
-    for (const dx of [-0.6, 0.6]) {
-      mesh(box(0.08, 0.45, 0.08, 0x644832), M.vertexMat, bx + dx, 0.22, W.maxZ + 7.2, 0, g, false);
+  for (const bx of [-12, 12]) {
+    mesh(rbox(1.5, 0.08, 0.45, 0xf5efe6, 0.02), M.vertexMat, bx, 0.42, W.maxZ + 7.0, 0, g, false);
+    for (const dx of [-0.55, 0.55]) {
+      mesh(box(0.06, 0.42, 0.06, 0x2d2d2d), M.vertexMat, bx + dx, 0.21, W.maxZ + 7.0, 0, g, false);
     }
-    buildPlant(M, g, bx + 2.0, W.maxZ + 7.2, 1.0);
+    buildPlant(M, g, bx + 2.0, W.maxZ + 7.0, 1.0);
   }
 }
 
@@ -1335,9 +1446,6 @@ function applyDayNight(world, night) {
   }
   for (const m of world.emissiveMaterials) {
     if (m.emissiveIntensity !== undefined) m.emissiveIntensity = night ? 0.9 : 0.3;
-  }
-  for (const m of world.windowMaterials) {
-    if (m.color) m.color.setHex(night ? 0x2b3a4a : 0xbfe6ea);
   }
 }
 
@@ -1375,6 +1483,7 @@ export function createWorld(scene) {
     elapsed: 0,
     materials: M
   };
+  initGlassPools(world, M);
 
   const floor1 = world.floorGroups[1];
   floor1.userData.floor = 1;
@@ -1390,17 +1499,17 @@ export function createWorld(scene) {
   buildGym(world, floor1, M);
   buildLounge(world, floor1, M);
   buildPantry(world, floor1, M);
-  // Flush pool tanaman/lampu di semua grup zona (masing-masing punya pool sendiri).
   floor1.traverse((obj) => {
     if (obj.userData.plantPools) flushPlantPools(obj);
-    if (obj.userData.lampPools) flushLampPools(obj);
+    if (obj.userData.linearPools) flushLinearPools(obj);
   });
+  flushGlassPools(world, floor1);
 
   const exterior = new THREE.Group();
   buildExterior(world, exterior, M);
   exterior.traverse((obj) => {
     if (obj.userData.plantPools) flushPlantPools(obj);
-    if (obj.userData.lampPools) flushLampPools(obj);
+    if (obj.userData.linearPools) flushLinearPools(obj);
   });
 
   scene.add(floor1, exterior);
@@ -1408,7 +1517,6 @@ export function createWorld(scene) {
   world.setDayNight = (night) => applyDayNight(world, night);
   world.update = (dt) => updateWorld(world, dt);
 
-  // Isi target kamera per ruangan dari data ZONES (dipakai dock navigasi).
   for (const [area, zone] of Object.entries(ZONES[1])) {
     world.roomTargets.set(area, new THREE.Vector3(zone.cx, FLOOR_Y[1] + 1.4, zone.cz));
   }

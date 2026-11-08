@@ -86,11 +86,11 @@ function togglePerspective() {
 }
 
 function toggleTopView() {
-  topView = !topView;
   const btn = document.getElementById("office-top-toggle");
   const viewBtn = document.getElementById("office-view-toggle");
-  if (topView) {
-    // Ortografis top-down: kamera y=46, arah ke target, tanpa perspektif.
+  // "Atas" = paksa tampilan orthographic top-down (NPC mudah diklik).
+  if (!topView || perspectiveMode) {
+    topView = true;
     if (perspectiveMode) {
       perspectiveMode = false;
       setupCamera();
@@ -103,6 +103,7 @@ function toggleTopView() {
     );
     if (btn) btn.setAttribute("aria-pressed", "true");
   } else {
+    topView = false;
     if (btn) btn.setAttribute("aria-pressed", "false");
     resetCamera();
   }
