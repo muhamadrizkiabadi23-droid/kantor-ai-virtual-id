@@ -8,7 +8,8 @@ const ROOT = __dirname;
 const DEFAULT_PORT = 4173;
 const PORT = Number(process.env.PORT || DEFAULT_PORT);
 // Railway & Codespaces butuh bind 0.0.0.0
-const HOST = process.env.HOST || (process.env.CODESPACES || process.env.RAILWAY_STATIC_URL ? "0.0.0.0" : "127.0.0.1");
+const isCloud = process.env.CODESPACES || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_SERVICE_NAME;
+const HOST = process.env.HOST || (isCloud ? "0.0.0.0" : "127.0.0.1");
 
 /* ------------------------------------------------------------------ */
 /* Penyimpanan akun (JSON — cukup untuk prototype)                     */
@@ -402,7 +403,9 @@ function createServer(port) {
 }
 
 async function startServer(port = PORT) {
-  const selectedPort = await resolvePort(port);
+  const isCloud = HOST === "0.0.0.0";
+  // Di cloud (Railway/Codespaces) pakai PORT langsung — jangan resolvePort
+  const selectedPort = isCloud ? port : await resolvePort(port);
   const server = createServer(selectedPort);
   const shownHost = HOST === "0.0.0.0" ? "localhost" : HOST;
   console.log(`Kantor AI Full Virtual: http://${shownHost}:${selectedPort}`);
