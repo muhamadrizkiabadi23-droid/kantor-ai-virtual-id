@@ -1,0 +1,11 @@
+[phases.setup]
+nixPackages = ["nodejs-20", "npm-10"]
+
+[phases.install]
+cmds = ["npm ci --omit=dev"]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "node server.js"
