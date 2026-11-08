@@ -12,7 +12,7 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 export const FLOOR_Y = { 1: 0 };
 export const BUILDING = { minX: -28, maxX: 28, minZ: -20, maxZ: 20, wallHeight: 3.4 };
 export const WALL = "#f2ead9";
-export const WALL_TOP = "#ddd0ba";
+export const WALL_TOP = "#1e1e1e";
 
 /**
  * 3x3 zone grid — rapi, simetris, koridor 7m di antara kolom.
@@ -72,14 +72,32 @@ export const DESK_LAYOUT = (() => {
 })();
 
 export const PALETTE = {
-  ink: 0x343b46, wood: 0x98633e, oak: 0xd5a66f, lightWood: 0xe7c99d,
-  cream: 0xf5ebd8, red: 0xb72d38, white: 0xfff9ec, green: 0x558568,
-  blue: 0x78a9c5, gold: 0xe1aa5d, glass: 0x9fd8da, water: 0x4fb3cf,
-  leaf: 0x4e8d57, concrete: 0xd9d3c8, darkWood: 0x644832,
-  slate: 0x4a5560, sofa: 0x965c62, sofaLight: 0xb37c6b,
-  rug: 0xc96f5c, poolTile: 0x7fc4d4, grass: 0x6fa86f,
-  carpet: 0x8d9aa8, rubber: 0x5c6670, curtain: 0xe8dcc8,
-  skin: 0xe6b48b, hair: 0x46382f
+  ink: 0x1a1c20,
+  wood: 0x2a2520,
+  oak: 0x2d2520,
+  lightWood: 0x3a322a,
+  cream: 0x2a2520,
+  red: 0xb72d38,
+  white: 0x1e1e1e,
+  green: 0x1a3d1f,
+  blue: 0x1a2a3a,
+  gold: 0x3a352a,
+  glass: 0x1a2a3a,
+  water: 0x0a2a3a,
+  leaf: 0x1a3d1f,
+  concrete: 0x222222,
+  darkWood: 0x1a1815,
+  slate: 0x2a2f3a,
+  sofa: 0x3d2a2a,
+  sofaLight: 0x4a3a35,
+  rug: 0x3a2a2a,
+  poolTile: 0x0a2a3a,
+  grass: 0x1a3a1a,
+  carpet: 0x1a1a1a,
+  rubber: 0x1a1e24,
+  curtain: 0x2a2520,
+  skin: 0x2a2520,
+  hair: 0x1a1815
 };
 
 /* ------------------------------------------------------------------ */
@@ -485,39 +503,39 @@ export class InstancePool {
 
 function buildMaterials() {
   const wood = woodTexture();
-  const woodMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.55, metalness: 0.04 });
+  const woodMat = new THREE.MeshStandardMaterial({ map: wood, roughness: 0.65, metalness: 0.03, color: 0x2a2520 });
   const carpet = carpetTexture();
-  const carpetMat = new THREE.MeshStandardMaterial({ map: carpet, roughness: 0.95, metalness: 0 });
+  const carpetMat = new THREE.MeshStandardMaterial({ map: carpet, roughness: 0.98, metalness: 0, color: 0x1a1a1a });
   const tile = tileTexture();
-  const tileMat = new THREE.MeshStandardMaterial({ map: tile, roughness: 0.32, metalness: 0.02 });
+  const tileMat = new THREE.MeshStandardMaterial({ map: tile, roughness: 0.45, metalness: 0.02, color: 0x252525 });
   const grass = grassTexture();
-  const grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 0.95, metalness: 0 });
+  const grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 0.98, metalness: 0, color: 0x1a3a1a });
   const rug = rugTexture();
-  const rugMat = new THREE.MeshStandardMaterial({ map: rug, roughness: 0.92, metalness: 0 });
+  const rugMat = new THREE.MeshStandardMaterial({ map: rug, roughness: 0.95, metalness: 0, color: 0x2d2520 });
   const prayRug = prayRugTexture();
-  const prayRugMat = new THREE.MeshStandardMaterial({ map: prayRug, roughness: 0.9, metalness: 0 });
+  const prayRugMat = new THREE.MeshStandardMaterial({ map: prayRug, roughness: 0.92, metalness: 0, color: 0x3a2a2a });
   const menu = menuBoardTexture();
-  const menuMat = new THREE.MeshStandardMaterial({ map: menu, roughness: 0.85, metalness: 0 });
-  const vertexMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.72, metalness: 0.05 });
+  const menuMat = new THREE.MeshStandardMaterial({ map: menu, roughness: 0.88, metalness: 0, color: 0x2a2520 });
+  const vertexMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.04 });
   const glassMat = new THREE.MeshStandardMaterial({
-    color: 0xbfe6ea, transparent: true, opacity: 0.26, roughness: 0.08, metalness: 0.1, side: THREE.DoubleSide
+    color: 0x1a2a3a, transparent: true, opacity: 0.18, roughness: 0.05, metalness: 0.08, side: THREE.DoubleSide
   });
-  const metalMat = new THREE.MeshStandardMaterial({ color: 0xb9c2c9, roughness: 0.35, metalness: 0.75 });
-  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x3c454e, roughness: 0.45, metalness: 0.6 });
-  const fabricMat = new THREE.MeshStandardMaterial({ color: 0x965c62, roughness: 0.95, metalness: 0 });
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0x3a4048, roughness: 0.4, metalness: 0.8 });
+  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x1e2228, roughness: 0.5, metalness: 0.65 });
+  const fabricMat = new THREE.MeshStandardMaterial({ color: 0x3d2a2a, roughness: 0.98, metalness: 0 });
   const screenMat = new THREE.MeshStandardMaterial({
-    color: 0x1a2530, emissive: 0x3d6a8a, emissiveIntensity: 0.6, roughness: 0.25, metalness: 0.1
+    color: 0x0a1218, emissive: 0x1a3a5a, emissiveIntensity: 0.8, roughness: 0.15, metalness: 0.08
   });
   const ledMat = new THREE.MeshStandardMaterial({
-    color: 0xf5f2e8, emissive: 0xfff2cf, emissiveIntensity: 0.9, roughness: 0.4, metalness: 0
+    color: 0x2a2824, emissive: 0x3a352a, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0
   });
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x4e8d57, roughness: 0.85, metalness: 0 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x1a3d1f, roughness: 0.9, metalness: 0 });
   const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x4fb3cf, transparent: true, opacity: 0.72, roughness: 0.12, metalness: 0.05
+    color: 0x0a2a3a, transparent: true, opacity: 0.65, roughness: 0.08, metalness: 0.03
   });
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0xf2ead9, roughness: 0.9, metalness: 0 });
-  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xd9d3c8, roughness: 0.85, metalness: 0 });
-  const rubberMat = new THREE.MeshStandardMaterial({ color: 0x5c6670, roughness: 0.95, metalness: 0 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.95, metalness: 0 });
+  const concreteMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9, metalness: 0 });
+  const rubberMat = new THREE.MeshStandardMaterial({ color: 0x1a1e24, roughness: 0.98, metalness: 0 });
   return {
     woodMat, carpetMat, tileMat, grassMat, rugMat, prayRugMat, menuMat, vertexMat, glassMat, metalMat,
     darkMetal, fabricMat, screenMat, ledMat, leafMat, waterMat, wallMat, concreteMat, rubberMat

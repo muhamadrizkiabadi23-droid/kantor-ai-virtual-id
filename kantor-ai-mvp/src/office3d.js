@@ -13,19 +13,19 @@ import { createSupportPanel } from "./officeSupport.js";
  * orchestrator). For this local preview, app.js plays the role of that
  * backend and publishes `office-state` events. The browser never reads a
  * database or credential store directly.
- */
+  */
 
-const mount = document.getElementById("office-3d");
-const sceneWrap = document.querySelector(".office-scene-wrap");
-const renderError = document.getElementById("office-render-error");
-const bubbleLayer = document.getElementById("office-bubbles");
-const liveStatus = document.getElementById("office-live-status");
-const statusText = document.getElementById("office-status-text");
-const floorButtons = [...document.querySelectorAll("[data-office-floor]:not([data-office-area])")];
-const roomButtons = [...document.querySelectorAll("[data-office-area]")];
-const agentCard = document.getElementById("office-agent-card");
+ const mount = document.getElementById("office-3d");
+ const sceneWrap = document.querySelector(".office-scene-wrap");
+ const renderError = document.getElementById("office-render-error");
+ const bubbleLayer = document.getElementById("office-bubbles");
+ const liveStatus = document.getElementById("office-live-status");
+ const statusText = document.getElementById("office-status-text");
+ const floorButtons = [...document.querySelectorAll("[data-office-floor]:not([data-office-area])")];
+ const roomButtons = [...document.querySelectorAll("[data-office-area]")];
+ const agentCard = document.getElementById("office-agent-card");
 
-const STATUS_LABELS = {
+ const STATUS_LABELS = {
   idle: "Siap",
   working: "Bekerja",
   thinking: "Berpikir",
@@ -52,15 +52,8 @@ let sleepMode = false;
 let tourMode = false;
 let tourAngle = 0;
 let quality = "auto";
-// Override lewat URL: ?quality=low|auto|high (berguna untuk HP lambat / audit).
-try {
-  const q = new URLSearchParams(location.search).get("quality");
-  if (q && ["low", "auto", "high"].includes(q)) quality = q;
-} catch (e) { /* abaikan */ }
-let fpsLowTime = 0;
-let selectedArea = "strategy";
-let selectedAgentId = null;
-let pointerStart = null;
+let topView = false;
+let roomPatches = [];
 let lastFrame = performance.now();
 let fps = 0;
 let fpsAccum = 0;
@@ -69,9 +62,88 @@ let frameCount = 0;
 let shadowDirty = true;
 let lastTaskSummary = null;
 let lastSnapshot = null;
-let roomPatches = [];
 let lastRenderInfo = null;
 let perfProbe = null;
+let pointerStart = null;
+let selectedAgentId = null;
+let selectedArea = "strategy";
+let fpsLowTime = 0;
+
+// ===== State: 360° camera toggle & room flyTo =====
+let cameraTransition = null;
+let cameraTransitionDuration = 1200; // ms
+let cameraTransitionStart = 0;
+let cameraTransitionFrom = { position: new THREE.Vector3(), target: new THREE.Vector3() };
+let cameraTransitionTo = { position: new THREE.Vector3(), target: new THREE.Vector3() };
+let cameraTransitionEasing = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // easeInOutCubic
+
+function togglePerspective() {
+  perspectiveMode = !perspectiveMode;
+  const btn = document.getElementById("office-view-toggle");
+  if (btn) btn.textContent = perspectiveMode ? "Isometrik" : "Perspektif";
+  setupCamera();
+  if (orbit) orbit.update();
+}
+
+function toggleTopView() {
+  topView = !topView;
+  const btn = document.getElementById("office-top-toggle");
+  const viewBtn = document.getElementById("office-view-toggle");
+  if (topView) {
+    // Ortografis top-down: kamera y=46, arah ke target, tanpa perspektif.
+    if (perspectiveMode) {
+      perspectiveMode = false;
+      setupCamera();
+      if (viewBtn) viewBtn.textContent = "Perspektif";
+    }
+    const target = orbit.target.clone();
+    startCameraTransition(
+      { position: camera.position.clone(), target: orbit.target.clone() },
+      { position: new THREE.Vector3(target.x, 46, target.z + 0.01), target: target }
+    );
+    if (btn) btn.setAttribute("aria-pressed", "true");
+  } else {
+    if (btn) btn.setAttribute("aria-pressed", "false");
+    resetCamera();
+  }
+}
+
+function startCameraTransition(from, to) {
+  cameraTransition = true;
+  cameraTransitionStart = performance.now();
+  cameraTransitionFrom = from;
+  cameraTransitionTo = to;
+}
+
+function resetCamera() {
+  setupCamera();
+  const target = new THREE.Vector3(0, FLOOR_Y[activeFloor] + 1.4, 0);
+  startCameraTransition(
+    { position: camera.position.clone(), target: orbit.target.clone() },
+    { position: new THREE.Vector3(21, FLOOR_Y[activeFloor] + 20, 25), target: target }
+  );
+}
+
+function flyToArea(areaName) {
+  const zone = ZONES[1][areaName];
+  if (!zone) return;
+  const target = new THREE.Vector3(zone.cx, FLOOR_Y[1] + 1.4, zone.cz);
+  const distance = perspectiveMode ? 18 : 14;
+  const angle = perspectiveMode ? Math.PI / 6 : 0;
+  const pos = new THREE.Vector3(
+    target.x + Math.sin(angle) * distance,
+    FLOOR_Y[1] + (perspectiveMode ? 14 : 20),
+    target.z + Math.cos(angle) * distance
+  );
+  startCameraTransition(
+    { position: camera.position.clone(), target: orbit.target.clone() },
+    { position: pos, target: target }
+  );
+  // Update dock active state
+  document.querySelectorAll(".dock-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.dockArea === areaName);
+  });
+}
 
 function statusLabel(status) {
   return STATUS_LABELS[status] || status;
@@ -201,44 +273,12 @@ function toggleSleep() {
   if (btn) btn.textContent = sleepMode ? "☀ Bangunkan tim" : "💤 Tidur";
 }
 
-let topView = false;
-function toggleTopView() {
-  topView = !topView;
-  const button = document.getElementById("office-top-toggle");
-  const viewBtn = document.getElementById("office-view-toggle");
-  if (topView) {
-    // Ortografis top-down: kamera y=46, arah ke target, tanpa perspektif.
-    // Jika sedang perspectiveMode, pindah ke ortho sejenak untuk top view.
-    if (perspectiveMode) {
-      perspectiveMode = false;
-      setupCamera();
-      if (viewBtn) viewBtn.textContent = perspectiveMode ? "Isometrik" : "Perspektif";
-    }
-    const target = orbit.target.clone();
-    camera.position.set(target.x, 46, target.z + 0.01);
-    camera.lookAt(target);
-    orbit.update();
-    if (button) button.setAttribute("aria-pressed", "true");
-  } else {
-    if (button) button.setAttribute("aria-pressed", "false");
-    resetCamera();
-  }
-}
-
 let bubblesVisible = true;
 function toggleBubbles() {
   bubblesVisible = !bubblesVisible;
   if (bubbleLayer) bubbleLayer.style.display = bubblesVisible ? "" : "none";
   const button = document.getElementById("office-bubble-toggle");
   if (button) button.setAttribute("aria-pressed", String(bubblesVisible));
-}
-
-function resetCamera() {
-  setupCamera();
-  document.getElementById("office-view-toggle").textContent = perspectiveMode ? "Isometrik" : "Perspektif";
-  orbit.target.set(0, FLOOR_Y[activeFloor] + 1.4, 0);
-  camera.position.set(21, FLOOR_Y[activeFloor] + 20, 25);
-  orbit.update();
 }
 
 function switchView() {
@@ -591,10 +631,10 @@ function initialize() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.95;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
-  renderer.shadowMap.autoUpdate = false;
+    renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.autoUpdate = false;
   // PBR image-based lighting: RoomEnvironment lewat PMREM memberi pantulan
   // lembut di permukaan logam/kaca tanpa lampu tambahan.
   try {
@@ -621,35 +661,43 @@ function initialize() {
     support?.appendChat("hermes", "Konteks WebGL hilang. Muat ulang halaman; laporan otomatis tersedia di tab Laporkan bug.");
   });
 
-  scene.background = new THREE.Color(0xbfe9eb);
+  scene.background = new THREE.Color(0x0d0d12);
 
-  hemi = new THREE.HemisphereLight(0xfff7e6, 0x647b70, 1.15);
-  scene.add(hemi);
-  sun = new THREE.DirectionalLight(0xfff0cc, 2.2);
-  sun.position.set(-14, 26, 16);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
-  sun.shadow.camera.left = -24;
-  sun.shadow.camera.right = 24;
-  sun.shadow.camera.top = 24;
-  sun.shadow.camera.bottom = -24;
-  sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 80;
-  sun.shadow.bias = -0.0006;
-  scene.add(sun);
+    hemi = new THREE.HemisphereLight(0x3a3f4a, 0x1a1c20, 0.6);
+    scene.add(hemi);
+    sun = new THREE.DirectionalLight(0xffeedd, 1.8);
+    sun.position.set(-14, 26, 16);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.left = -24;
+    sun.shadow.camera.right = 24;
+    sun.shadow.camera.top = 24;
+    sun.shadow.camera.bottom = -24;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 80;
+    sun.shadow.bias = -0.0006;
+    scene.add(sun);
 
-  for (const [x, z] of [[0, -3], [12.75, -3], [-12.75, -3], [0, 5.5]]) {
-    const light = new THREE.PointLight(0xffc46a, 0, 14, 2);
-    light.position.set(x, 2.5, z);
-    light.visible = false;
-    scene.add(light);
-    nightLights.push(light);
-  }
+    // Accent fill lights for depth
+    const fill1 = new THREE.DirectionalLight(0x2a2f3a, 0.3);
+    fill1.position.set(20, 18, -10);
+    scene.add(fill1);
+    const fill2 = new THREE.DirectionalLight(0x1a2535, 0.25);
+    fill2.position.set(-20, 18, 10);
+    scene.add(fill2);
 
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(240, 240),
-    new THREE.MeshStandardMaterial({ color: 0x9dc696, roughness: 1 })
-  );
+    for (const [x, z] of [[0, -3], [12.75, -3], [-12.75, -3], [0, 5.5]]) {
+      const light = new THREE.PointLight(0xffb84d, 0, 14, 2);
+      light.position.set(x, 2.5, z);
+      light.visible = false;
+      scene.add(light);
+      nightLights.push(light);
+    }
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(240, 240),
+      new THREE.MeshStandardMaterial({ color: 0x0f0f12, roughness: 1 })
+    );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.55;
   ground.receiveShadow = true;
