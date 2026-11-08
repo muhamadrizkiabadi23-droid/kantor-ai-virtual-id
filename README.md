@@ -42,6 +42,25 @@ tools/ai-rules.exe status
 | `30-workflow.md` | Git, commit, push, deploy |
 | `40-testing.md` | Cara menjalankan dan menambah tes |
 | `50-pitfalls.md` | Jebakan yang sudah pernah terjadi — jangan diulang |
+| `60-tools.md` | Alat eksternal (Agent Reach, ai-rules, cloudflared) |
+
+## Agent Reach — akses platform read-only
+
+`agent-reach` memberi akses **baca** ke GitHub, YouTube (+subtitle), Bilibili,
+V2EX, pencarian web, dan bisa ditambah X/Twitter, Reddit, Facebook, Instagram,
+小红书, LinkedIn, BOSS直聘, 雪球, 小宇宙.
+
+```bash
+agent-reach channels                      # daftar kanal dan tindakan
+agent-reach github search "query" --limit 5
+agent-reach read <url>                    # kanal dipilih dari URL
+```
+
+- **Read-only** — tidak bisa posting, komentar, like, atau pesan.
+- **Tidak pernah login untuk Anda** dan tidak minta password. Kalau
+  `NEED_LOGIN`, Anda yang login di jendela yang dibuka alat.
+- Skill `agent-reach` sudah terdaftar di Hermes (kategori `research/`).
+- Detail pemakaian ada di `ai-rules/60-tools.md`.
 
 ## Menjalankan
 
