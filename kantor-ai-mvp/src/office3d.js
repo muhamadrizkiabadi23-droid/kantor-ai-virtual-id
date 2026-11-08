@@ -46,7 +46,7 @@ let world;
 let agentSystem;
 let support;
 let activeFloor = 1;
-let perspectiveMode = true;
+let perspectiveMode = false; // default orthographic top-down
 let nightMode = false;
 let sleepMode = false;
 let tourMode = false;
@@ -205,8 +205,15 @@ let topView = false;
 function toggleTopView() {
   topView = !topView;
   const button = document.getElementById("office-top-toggle");
+  const viewBtn = document.getElementById("office-view-toggle");
   if (topView) {
-    orbit.minPolarAngle = 0;
+    // Ortografis top-down: kamera y=46, arah ke target, tanpa perspektif.
+    // Jika sedang perspectiveMode, pindah ke ortho sejenak untuk top view.
+    if (perspectiveMode) {
+      perspectiveMode = false;
+      setupCamera();
+      if (viewBtn) viewBtn.textContent = perspectiveMode ? "Isometrik" : "Perspektif";
+    }
     const target = orbit.target.clone();
     camera.position.set(target.x, 46, target.z + 0.01);
     camera.lookAt(target);
