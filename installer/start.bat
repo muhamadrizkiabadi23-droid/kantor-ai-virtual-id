@@ -1,5 +1,5 @@
 @echo off
-title Kantor AI Merah Putih
+title KANTOR AI ID
 
 cd /d "%~dp0..\kantor-ai-mvp"
 

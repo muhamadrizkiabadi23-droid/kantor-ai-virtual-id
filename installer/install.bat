@@ -1,15 +1,15 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Kantor AI Merah Putih - Installer
+title KANTOR AI ID - Installer
 cd /d "%~dp0"
 
 echo ============================================
-echo   KANTOR AI MERAH PUTIH - INSTALLER
+echo   KANTOR AI ID - INSTALLER
 echo   Sekali klik, semua terpasang.
 echo ============================================
 echo.
 
-set "TARGET=%USERPROFILE%\KantorAIMerahPutih"
+set "TARGET=%USERPROFILE%\KantorAIID"
 set "SRC=%~dp0..\kantor-ai-mvp"
 
 if not exist "%SRC%" (
@@ -87,5 +87,5 @@ powershell -NoProfile -Command "$u='https://nodejs.org/dist/latest-lts/node-v22.
 goto :eof
 
 :MakeShortcut
-powershell -NoProfile -Command "$ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut([Environment]::GetFolderPath('Desktop')+'\\Kantor AI Merah Putih.lnk'); $s.TargetPath='%TARGET%\kantor-ai-mvp\start.bat'; $s.WorkingDirectory='%TARGET%\kantor-ai-mvp'; $s.IconLocation='%SystemROOT%\System32\shell32.dll,234'; $s.Save()"
+powershell -NoProfile -Command "$ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut([Environment]::GetFolderPath('Desktop')+'\\KANTOR AI ID.lnk'); $s.TargetPath='%TARGET%\kantor-ai-mvp\start.bat'; $s.WorkingDirectory='%TARGET%\kantor-ai-mvp'; $s.IconLocation='%SystemROOT%\System32\shell32.dll,234'; $s.Save()"
 goto :eof

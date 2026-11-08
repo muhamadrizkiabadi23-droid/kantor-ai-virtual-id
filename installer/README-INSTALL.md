@@ -1,4 +1,4 @@
-# Kantor AI Merah Putih — Panduan Instalasi
+# KANTOR AI ID — Panduan Instalasi
 
 ## Kebutuhan sistem
 | Item | Minimum |
@@ -15,7 +15,7 @@
 2. Buka folder `installer`.
 3. Klik dua kali **`install.bat`**.
 4. Tunggu 5 langkah selesai (folder, salin berkas, Node.js, dependensi, pintasan).
-5. Klik pintasan **Kantor AI Merah Putih** di desktop, atau jalankan `start.bat`.
+5. Klik pintasan **KANTOR AI ID** di desktop, atau jalankan `start.bat`.
 
 ## Yang dipasang otomatis
 - **Node.js LTS** — bila belum ada (via winget atau MSI senyap).
