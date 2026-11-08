@@ -5,32 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f5f6f8">
     <title>Kantor AI Merah Putih — Full Virtual</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css">
     <script type="importmap">
-      {"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}
+      {"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}
     </script>
     <script>
       // Proteksi dashboard: belum masuk → kembalikan ke halaman login.
+      // Mode demo: kalau backend tidak terjangkau (mis. GitHub Pages), biarkan masuk
+      // dengan profil lokal supaya prototype tetap bisa diuji.
       (function () {
-        var isApp = location.pathname.startsWith("/app") || location.pathname === "/index.html";
+        var isApp = location.pathname.startsWith("/app") || location.pathname === "/index.html" || location.pathname.endsWith("/");
         if (!isApp) return;
-        fetch("/api/auth/me", { credentials: "same-origin" })
+        fetch("./api/auth/me", { credentials: "same-origin" })
           .then(function (response) {
-            if (!response.ok) location.replace("/login");
-            else {
+            if (!response.ok) {
+              if (response.status === 401 || response.status === 404) location.replace("./login");
+            } else {
               var userChip = document.getElementById("user-chip");
               if (userChip) response.json().then(function (data) {
                 userChip.textContent = data.name || "";
               }).catch(function () { /* biarkan */ });
             }
           })
-          .catch(function () { /* biarkan, server mungkin belum siap */ });
+          .catch(function () { /* backend tidak terjangkau — lanjut mode demo */ });
       })();
     </script>
-    <script defer src="/src/workflow.js"></script>
-    <script defer src="/src/app.js"></script>
-    <script type="module" src="/src/office3d.js"></script>
+    <script defer src="./src/workflow.js"></script>
+    <script defer src="./src/app.js"></script>
+    <script type="module" src="./src/office3d.js"></script>
   </head>
   <body>
     <div class="app-shell">
