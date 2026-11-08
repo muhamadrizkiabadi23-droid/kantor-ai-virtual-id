@@ -8,8 +8,9 @@ const ROOT = __dirname;
 const DEFAULT_PORT = 4173;
 const PORT = Number(process.env.PORT || DEFAULT_PORT);
 // Railway & Codespaces butuh bind 0.0.0.0
-const isCloud = process.env.CODESPACES || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_SERVICE_NAME;
-const HOST = process.env.HOST || (isCloud ? "0.0.0.0" : "127.0.0.1");
+const isCloud = Boolean(process.env.CODESPACES || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_SERVICE_NAME);
+const HOST = isCloud ? "0.0.0.0" : (process.env.HOST || "127.0.0.1");
+console.log(`[env] PORT=${process.env.PORT || "(default)"} HOST=${HOST} RAILWAY_ENV=${process.env.RAILWAY_ENVIRONMENT || "-"} CODESPACES=${process.env.CODESPACES || "-"}`);
 
 /* ------------------------------------------------------------------ */
 /* Penyimpanan akun (JSON — cukup untuk prototype)                     */
