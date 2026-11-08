@@ -411,6 +411,21 @@ function attachServerEvents(server) {
   server.on("listening", () => {
     const addr = server.address();
     console.log(`[server] listening on http://${addr.address}:${addr.port} (${addr.family})`);
+    // Self-test: pastikan server benar-benar bisa melayani HTTP di dalam container
+    const probe = http.get(
+      { host: "127.0.0.1", port: addr.port, path: "/health", timeout: 4000 },
+      (res) => {
+        console.log(`[server] self-test /health -> HTTP ${res.statusCode}`);
+        res.resume();
+      }
+    );
+    probe.on("error", (error) => {
+      console.error(`[server] self-test GAGAL: ${error.code || ""} ${error.message}`);
+    });
+    probe.on("timeout", () => {
+      probe.destroy();
+      console.error("[server] self-test TIMEOUT");
+    });
   });
   server.on("error", (error) => {
     console.error(`[server] ERROR ${error.code || ""}: ${error.message}`);
