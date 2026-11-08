@@ -150,6 +150,29 @@ kantor-ai-mvp/
 npm test
 ```
 
+## Kepemilikan tugas (1 tugas = 1 PIC)
+
+Setiap tugas punya **satu penanggung jawab (PIC)** yang sama dari briefing
+sampai presentasi — tidak berpindah agen di tengah proses.
+
+- PIC dipilih sekali saat tugas dibuat, berdasarkan kata kunci kategori/produk
+  lalu diseimbangkan dengan beban tiap divisi.
+- Kepemilikan disimpan di `localStorage` kunci `kantor.owners.v1` dan tetap
+  sama saat tugas direvisi.
+- Chip `PIC` di kanan atas HUD menunjukkan siapa yang sedang memegang tugas.
+- Papan tugas menampilkan `PIC: <nama>`; klik nama untuk lihat perannya.
+- Rekan satu divisi bisa membantu (`collaborating`), tapi **tidak mengambil
+  alih** kepemilikan.
+
+## Aturan AI
+
+Aturan lintas-agent ada di `../ai-rules/*.md`. Setelah mengubahnya:
+
+```bash
+../tools/ai-rules.exe generate   # bangkitkan AGENTS.md/CLAUDE.md/GEMINI.md
+../tools/ai-rules.exe status     # pastikan sinkron
+```
+
 ## Keamanan
 
 - Server lokal only di `127.0.0.1` — tidak bisa diakses dari internet,

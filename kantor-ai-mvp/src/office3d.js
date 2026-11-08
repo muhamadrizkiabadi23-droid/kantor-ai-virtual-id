@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createWorld, FLOOR_Y, ZONES, BUILDING } from "./officeWorld.js";
 import { createAgentSystem } from "./officeAgents.js";
 import { createSupportPanel } from "./officeSupport.js";
@@ -182,7 +183,8 @@ function setDayNight() {
   nightMode = !nightMode;
   world.setDayNight(nightMode);
   scene.background.setHex(nightMode ? 0x18283d : 0xbfe9eb);
-  hemi.intensity = nightMode ? 0.5 : 1.5;
+  hemi.intensity = nightMode ? 0.5 : 1.15;
+  if ("environmentIntensity" in scene) scene.environmentIntensity = nightMode ? 0.25 : 1;
   sun.intensity = nightMode ? 0.55 : 2.2;
   sun.color.setHex(nightMode ? 0x9bb7ff : 0xfff0cc);
   nightLights.forEach((light) => { light.visible = nightMode; });
@@ -582,9 +584,20 @@ function initialize() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.95;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
+  // PBR image-based lighting: RoomEnvironment lewat PMREM memberi pantulan
+  // lembut di permukaan logam/kaca tanpa lampu tambahan.
+  try {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene = new THREE.Scene();
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+  } catch (e) {
+    scene = new THREE.Scene();
+  }
   // Deteksi software renderer (SwiftShader/llvmpipe/Microsoft Basic) → paksa hemat.
   try {
     const gl = renderer.getContext();
@@ -601,10 +614,9 @@ function initialize() {
     support?.appendChat("hermes", "Konteks WebGL hilang. Muat ulang halaman; laporan otomatis tersedia di tab Laporkan bug.");
   });
 
-  scene = new THREE.Scene();
   scene.background = new THREE.Color(0xbfe9eb);
 
-  hemi = new THREE.HemisphereLight(0xfff7e6, 0x647b70, 1.5);
+  hemi = new THREE.HemisphereLight(0xfff7e6, 0x647b70, 1.15);
   scene.add(hemi);
   sun = new THREE.DirectionalLight(0xfff0cc, 2.2);
   sun.position.set(-14, 26, 16);

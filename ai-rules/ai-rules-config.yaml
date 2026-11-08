@@ -1,0 +1,9 @@
+# Konfigurasi ai-rules untuk KANTOR AI ID
+# Aturan sumber ada di ai-rules/*.md — JANGAN mengubah file hasil generate.
+#
+# gitignore: false dipilih supaya AGENTS.md/CLAUDE.md/GEMINI.md ikut ter-commit.
+# Alasan: project ini sering dipindah PC, dan AI agent harus langsung punya
+# aturan tanpa perlu menjalankan ai-rules dulu.
+agents: ["claude", "cursor", "codex", "gemini", "copilot", "amp", "cline", "roo", "kilocode", "goose", "firebender"]
+gitignore: false
+nested_depth: 2

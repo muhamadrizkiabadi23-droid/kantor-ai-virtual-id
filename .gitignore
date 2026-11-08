@@ -19,3 +19,9 @@ arsip/data-runtime-lama/
 
 # Akun prototype (data konsumen, jangan masuk git)
 users.json
+
+# AI Rules — aturan sumber ada di ai-rules/*.md (ikut ter-commit).
+# AGENTS.md / CLAUDE.md / GEMINI.md sengaja di-commit supaya aturan langsung
+# ada di mesin mana pun, tanpa harus menjalankan ai-rules dulu.
+# Hanya folder perantara generate yang diabaikan.
+ai-rules/.generated-ai-rules/

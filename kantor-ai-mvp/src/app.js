@@ -86,6 +86,7 @@
   ];
   const TEAM = AGENT_ROSTER.filter((agent) => agent.core).map((agent) => agent.id);
   const CORE_ROSTER = AGENT_ROSTER.filter((agent) => agent.core);
+  loadOwners();
   const officeAreas = {
     workspace: { label: "WORKSPACE", initials: "WS", name: "Workspace 48 Meja", role: "Ruang kerja utama", description: "48 workstation rapi untuk tim. Meja, kursi, dan monitor siap dipakai kapan saja.", status: "Siap digunakan" },
     meeting: { label: "RUANG RAPAT", initials: "RK", name: "Ruang rapat", role: "Kolaborasi tim", description: "Meja oval, 10 kursi, layar proyektor, dan whiteboard untuk briefing serta presentasi.", status: "Siap digunakan" },
@@ -352,6 +353,103 @@
     ids.forEach((id) => setAgent(id, { status: "idle", message: "", partnerId: null, taskId: null, taskTitle: null, decorative: false, target: null }));
   }
 
+  // --- Kepemilikan tugas: 1 tugas = 1 PIC --------------------------------
+  // Setiap tugas punya satu penanggung jawab (PIC) yang sama dari awal sampai
+  // selesai. PIC dipilih sekali saat tugas dibuat, disimpan di localStorage,
+  // dan tidak berubah meski tugas direvisi. Ini menjaga pekerjaan tetap
+  // "satu tujuan" dan tidak berpindah-pindah agen di tengah proses.
+  const PIC_POOL = [
+    { id: "sari", divisi: "klien", keywords: ["klien", "cs", "layanan", "pelanggan", "reservasi", "pesan", "tamu"] },
+    { id: "kirana", divisi: "pimpinan", keywords: ["operasional", "koordinasi", "proses", "jadwal", "agenda", "rapat"] },
+    { id: "raka", divisi: "pimpinan", keywords: ["strategi", "brand", "merek", "posisi", "visi", "tagline"] },
+    { id: "arif", divisi: "pimpinan", keywords: ["kecerdasan buatan", "chatbot", "otomatis", "sistem", "teknologi", "aplikasi", "digital"] },
+    { id: "nadia", divisi: "kreatif", keywords: ["desain", "grafis", "visual", "ilustrasi", "logo", "poster", "foto", "banner"] },
+    { id: "dimas", divisi: "video", keywords: ["video", "editing", "motion", "animasi", "rekaman", "sinematik"] },
+    { id: "dewi", divisi: "konten", keywords: ["konten", "caption", "copy", "tulisan", "artikel", "naskah", "skrip", "teks"] },
+    { id: "bima", divisi: "marketing", keywords: ["ads", "iklan", "promosi", "penjualan", "campaign", "kampanye", "bursa"] },
+    { id: "gilang", divisi: "sosmed", keywords: ["sosmed", "instagram", "tiktok", "facebook", "media sosial", "komunitas", "influencer"] },
+    { id: "yoga", divisi: "data", keywords: ["data", "riset", "analisis", "laporan", "sentimen", "kompetitor", "survei"] },
+    { id: "bayu", divisi: "keuangan", keywords: ["keuangan", "pajak", "legal", "biaya", "anggaran", "izin", "sni"] }
+  ];
+
+  const OWNER_KEY = "kantor.owners.v1";
+  const taskOwners = new Map(); // taskId -> agentId
+  const ownerLoad = new Map();  // agentId -> jumlah tugas aktif
+
+  function loadOwners() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(OWNER_KEY) || "{}");
+      for (const [taskId, ownerId] of Object.entries(raw)) {
+        if (AGENT_ROSTER.some((item) => item.id === ownerId)) taskOwners.set(taskId, ownerId);
+      }
+    } catch { /* localStorage tidak tersedia — lewati */ }
+  }
+
+  function persistOwners() {
+    try { localStorage.setItem(OWNER_KEY, JSON.stringify(Object.fromEntries(taskOwners))); } catch { /* abaikan */ }
+  }
+
+  // Cocokkan kata kunci dengan batas kata, supaya "ai" tidak salah cocok
+  // dengan "santai"/"kedai" dan "kol" tidak cocok dengan "bursa"/"sekolah".
+  function picKeywordHit(pic, word, task) {
+    const haystack = ` ${[task.category, task.product, task.audience, task.goal, task.brandDirection].join(" ").toLowerCase()} `;
+    const escaped = String(word).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`).test(haystack);
+  }
+
+  function ownerFor(task) {
+    const existing = taskOwners.get(task.id);
+    if (existing && AGENT_ROSTER.some((item) => item.id === existing)) return existing;
+
+    // Kata kunci yang lebih panjang dianggap lebih spesifik, sehingga
+    // "Konten Instagram" jatuh ke sosmed (instagram), bukan ke konten (konten).
+    const scored = PIC_POOL.map((pic) => {
+      let score = 0;
+      let bestLen = 0;
+      for (const word of pic.keywords) {
+        if (picKeywordHit(pic, word, task)) {
+          score += 100;
+          if (word.length > bestLen) bestLen = word.length;
+        }
+      }
+      return { pic, score: score + bestLen - (ownerLoad.get(pic.id) || 0) * 10 };
+    }).sort((a, b) => b.score - a.score);
+
+    const chosen = scored[0].pic;
+    taskOwners.set(task.id, chosen.id);
+    ownerLoad.set(chosen.id, (ownerLoad.get(chosen.id) || 0) + 1);
+    persistOwners();
+    return chosen.id;
+  }
+
+  function releaseOwner(taskId) {
+    const ownerId = taskOwners.get(taskId);
+    if (!ownerId) return;
+    const next = (ownerLoad.get(ownerId) || 1) - 1;
+    if (next <= 0) ownerLoad.delete(ownerId); else ownerLoad.set(ownerId, next);
+    taskOwners.delete(taskId);
+    persistOwners();
+  }
+
+  function supportFor(picId, task) {
+    const pic = PIC_POOL.find((item) => item.id === picId);
+    if (!pic) return [];
+    const mates = AGENT_ROSTER.filter((item) => item.divisi === pic.divisi && item.id !== picId && !item.core);
+    if (!mates.length) return [];
+    const seed = [...String(task.id)].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    const start = seed % mates.length;
+    const picks = [];
+    for (let step = 0; step < 2 && mates.length; step += 1) picks.push(mates[(start + step) % mates.length].id);
+    return picks;
+  }
+
+  function picLabel(task) {
+    const ownerId = taskOwners.get(task.id);
+    if (!ownerId) return "";
+    const def = AGENT_ROSTER.find((item) => item.id === ownerId);
+    return def ? def.name : "";
+  }
+
   function buildMeetings(agents) {
     const map = new Map();
     for (const agent of agents) {
@@ -390,6 +488,20 @@
     };
     lastSnapshot = snapshot;
     document.dispatchEvent(new CustomEvent("office-state", { detail: snapshot }));
+
+    // Indikator PIC aktif — supaya terlihat siapa yang memegang tugas.
+    const picChip = document.getElementById("office-pic-chip");
+    const picNameEl = document.getElementById("office-pic-name");
+    if (picChip && picNameEl) {
+      const activeTask = activeTaskId ? tasks.find((item) => item.id === activeTaskId) : null;
+      const name = activeTask ? picLabel(activeTask) : "";
+      if (name) {
+        picChip.hidden = false;
+        picNameEl.textContent = name;
+      } else {
+        picChip.hidden = true;
+      }
+    }
     return snapshot;
   }
 
@@ -466,26 +578,41 @@
     return wait(holdMs);
   }
 
+  // PIC tetap bekerja, dibantu 1-2 rekan satu divisi (tidak mengambil alih).
+  async function collaborateStep(picId, supportIds, task, message, holdMs = 2000) {
+    setAllIdle(TEAM);
+    setAgent(picId, { status: "working", taskId: task.id, taskTitle: task.title, message });
+    supportIds.forEach((id) => setAgent(id, {
+      status: "collaborating", partnerId: picId, taskId: task.id, taskTitle: task.title, message: `Membantu ${agentName(picId)}`
+    }));
+    activeStage = "collaborate";
+    notice = `${agentName(picId)} + ${supportIds.length} rekan: ${message}`;
+    emitOfficeState();
+    await wait(holdMs);
+  }
+
+  // Alur kerja: satu PIC memegang tugas dari briefing sampai presentasi.
   async function directTask(task) {
     activeTaskId = task.id;
     stopAmbience();
-    const title = task.title;
+    const pic = ownerFor(task);
+    const support = supportFor(pic, task);
+    const picName = agentName(pic);
 
-    await meetingStep(task, `Briefing ${title}`, "briefing", 1600);
-    await workStep("sari", task, "Merapikan brief", "intake");
-    await handoff("sari", "raka", task, "Menyerahkan brief");
-    await workStep("raka", task, "Menyusun arah konten", "strategy");
-    await handoff("raka", "dewi", task, "Menyerahkan arah konten");
-    await workStep("dewi", task, "Menyiapkan draf", "studio");
-    await handoff("dewi", "arif", task, "Menyerahkan draf");
-    await workStep("arif", task, "Memeriksa draf", "review");
-    await meetingStep(task, "Mempresentasikan hasil", "presentation", 2000);
+    await meetingStep(task, `Briefing ${task.title} — PIC ${picName}`, "briefing", 1600);
+    await workStep(pic, task, `${picName} menyiapkan brief kerja`, "intake");
+    await workStep(pic, task, `${picName} menyusun arah kerja`, "strategy");
+    if (support.length) await collaborateStep(pic, support, task, "membahas pendekatan");
+    await workStep(pic, task, `${picName} menyiapkan draf`, "studio");
+    await workStep(pic, task, `${picName} memeriksa dan menyempurnakan draf`, "review");
+    await meetingStep(task, `Presentasi ${task.title} — ${picName}`, "presentation", 2000);
 
     setAllIdle(TEAM);
     activeTaskId = null;
     activeStage = null;
-    notice = "Draf contoh siap ditinjau operator";
+    notice = `${picName} menyerahkan draf contoh untuk ditinjau operator`;
     emitOfficeState();
+    if (typeof renderTaskBoard === "function") renderTaskBoard();
     startAmbience();
     showApprovalToast(task);
   }
@@ -493,32 +620,37 @@
   async function directRevision(task, note) {
     activeTaskId = task.id;
     stopAmbience();
-    const title = task.title;
+    const pic = ownerFor(task);
+    const support = supportFor(pic, task);
+    const picName = agentName(pic);
 
-    await workStep("arif", task, "Mengevaluasi catatan revisi", "review", 1800);
-    await handoff("arif", "dewi", task, "Membahas revisi");
-    await workStep("dewi", task, "Merevisi draf", "studio");
-    await handoff("dewi", "arif", task, "Menyerahkan revisi");
-    await workStep("arif", task, "Review ulang", "review", 2000);
-    await meetingStep(task, "Hasil revisi", "presentation", 2000);
+    await workStep(pic, task, `${picName} mengevaluasi catatan revisi`, "review", 1800);
+    if (support.length) await collaborateStep(pic, support, task, "berdiskusi soal revisi");
+    await workStep(pic, task, `${picName} merevisi draf`, "studio");
+    await workStep(pic, task, `${picName} me-review ulang hasil revisi`, "review", 2000);
+    await meetingStep(task, `Hasil revisi — ${picName}`, "presentation", 2000);
 
     setAllIdle(TEAM);
     activeTaskId = null;
     activeStage = null;
-    notice = "Revisi siap ditinjau operator";
+    notice = `${picName} menyerahkan revisi untuk ditinjau operator`;
     emitOfficeState();
+    if (typeof renderTaskBoard === "function") renderTaskBoard();
     startAmbience();
   }
 
   async function directApproval(task) {
     activeTaskId = task.id;
     stopAmbience();
-    await meetingStep(task, "Draf disetujui 🎉", "approved", 2200);
+    const pic = ownerFor(task);
+    await meetingStep(task, `Draf disetujui 🎉 — ${agentName(pic)}`, "approved", 2200);
+    releaseOwner(task.id);
     setAllIdle(TEAM);
     activeTaskId = null;
     activeStage = null;
-    notice = "Tugas disetujui";
+    notice = `Tugas disetujui — ${agentName(pic)}`;
     emitOfficeState();
+    if (typeof renderTaskBoard === "function") renderTaskBoard();
     startAmbience();
   }
 
@@ -718,6 +850,7 @@
       }
       if (action === "finalize") showToast("Status final dicatat secara lokal.");
       if (action === "cancel") {
+        releaseOwner(tasks[index].id);
         showToast("Tugas dibatalkan.");
         queueDirection({ kind: "cancel" });
       }
@@ -975,7 +1108,16 @@
     }
   }
 
-  window.kantorAI = { runAgentCommand, emitOfficeState, agents: AGENT_ROSTER };
+  window.kantorAI = {
+    runAgentCommand,
+    emitOfficeState,
+    agents: AGENT_ROSTER,
+    ownerFor,
+    picLabel,
+    supportFor,
+    taskOwners,
+    ownerLoad
+  };
 
   document.addEventListener("click", (event) => {
     const removeButton = event.target.closest("[data-social-remove]");
@@ -1009,6 +1151,7 @@
     const input = Object.fromEntries(formData.entries());
     try {
       const task = workflow.createTask(input);
+      ownerFor(task); // PIC dipilih sekali sejak tugas dibuat, lalu tidak berubah
       tasks.push(task);
       persist();
       event.currentTarget.reset();
@@ -1286,7 +1429,7 @@
           <span class="task-item-status task-status-done">Selesai</span>
         </div>
         <div class="task-item-meta">
-          <span class="task-item-agent">—</span>
+          <span class="task-item-agent">PIC —</span>
           <span class="task-item-time">Buat tugas baru</span>
         </div>
       </div>`;
@@ -1297,14 +1440,16 @@
       const statusLabel = { review: "Review", revision: "Revisi", approved: "Selesai", cancelled: "Batal" }[task.status] || task.status;
       const statusClass = { review: "task-status-running", revision: "task-status-waiting", approved: "task-status-done", cancelled: "task-status-waiting" }[task.status] || "task-status-done";
       const progress = task.status === "approved" ? 100 : task.status === "review" ? 60 : task.status === "revision" ? 40 : 20;
+      const picName = picLabel(task);
+      const picRole = picName ? (AGENT_ROSTER.find((item) => item.name === picName) || {}).role || "" : "";
       return `<div class="task-item" data-task-id="${escapeHtml(task.id)}">
         <div class="task-item-head">
           <span class="task-item-title">${escapeHtml(task.title)}</span>
           <span class="task-item-status ${statusClass}">${statusLabel}</span>
         </div>
         <div class="task-item-meta">
-          <span class="task-item-agent">${escapeHtml(task.business || "—")}</span>
-          <span class="task-item-time">${formatDate(task.createdAt)}</span>
+          <span class="task-item-agent" title="${escapeHtml(picRole)}">PIC: ${escapeHtml(picName || "—")}</span>
+          <span class="task-item-time">${escapeHtml(task.business || "—")}</span>
         </div>
         <div class="task-item-progress"><div style="width:${progress}%"></div></div>
         ${task.status === "review" || task.status === "revision" ? `<div class="task-item-actions">

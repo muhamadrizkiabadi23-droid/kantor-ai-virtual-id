@@ -1146,6 +1146,21 @@ body.login-body {
 }
 .office-status-chip i { width: 8px; height: 8px; border-radius: 50%; background: #55c4b5; box-shadow: 0 0 8px #55c4b5; }
 
+/* --- PIC chip (penanggung jawab tugas aktif) --- */
+.office-pic-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 11px; border-radius: 20px;
+  background: rgba(8, 10, 13, .92); border: 1px solid rgba(225, 170, 93, .55);
+  font-size: 11px; font-weight: 600; color: #fdf6e9;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+}
+.office-pic-chip .office-pic-label {
+  font-size: 9px; letter-spacing: .08em; font-weight: 700;
+  color: #1a1208; background: #e1aa5d; border-radius: 8px; padding: 1px 6px;
+}
+.office-pic-chip[hidden] { display: none; }
+
 /* --- Legend --- */
 .office-legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; pointer-events: auto; }
 .office-legend span { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; color: rgba(242, 234, 217, .65); }
@@ -1541,12 +1556,29 @@ dialog::backdrop { background: rgba(0, 0, 0, .7); backdrop-filter: blur(4px); }
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
+  .topbar { padding: 0 10px; gap: 6px; }
   .topbar-copy small { display: none; }
-  .topbar-btn { padding: 0 10px; font-size: 10px; }
-  .office-btn { height: 28px; font-size: 10px; padding: 0 8px; }
-  .dock-btn { width: 42px; padding: 6px 2px 2px; }
-  .dock-ico { font-size: 16px; }
-  .office-hud-command { min-width: 300px; }
+  .topbar-status { display: none; }
+  .topbar-actions { gap: 4px; }
+  .topbar-btn { padding: 0 7px; font-size: 10px; height: 26px; white-space: nowrap; }
+  .topbar-mark { width: 28px; height: 28px; font-size: 12px; }
+  .topbar-copy strong { font-size: 13px; }
+
+  .office-hud-tl { max-width: calc(100vw - 20px); }
+  .office-hud-row { flex-wrap: wrap; }
+  .office-hud-tr { display: none; }
+  .office-btn { height: 26px; font-size: 10px; padding: 0 7px; white-space: nowrap; }
+
+  .office-hud-bl { max-width: calc(100vw - 20px); }
+  .office-legend { flex-wrap: wrap; row-gap: 2px; font-size: 10px; }
+
+  #office-room-dock { gap: 2px; padding: 4px 6px; }
+  .dock-btn { width: 34px; padding: 5px 2px 2px; flex-shrink: 0; }
+  .dock-ico { font-size: 14px; }
+  .dock-label { font-size: 7px; }
+
+  .office-hud-command { min-width: 0; width: calc(100vw - 24px); }
+  .office-hud-command input { font-size: 12px; }
   .kbd-hint { display: none; }
   .task-board { width: 100%; }
   .ceo-panel { width: 100%; }
