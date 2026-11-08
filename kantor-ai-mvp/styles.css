@@ -1383,15 +1383,15 @@ body.login-body {
 
 /* --- Keyboard hint --- */
 .kbd-hint {
-  position: fixed; bottom: 12px; left: 12px; z-index: 10; pointer-events: none;
-  display: flex; flex-wrap: wrap; gap: 6px; max-width: 60vw;
+  position: fixed; bottom: 46px; left: 12px; z-index: 10; pointer-events: none;
+  display: flex; flex-wrap: nowrap; gap: 5px; max-width: 62vw;
 }
 .kbd-key {
   display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-  min-width: 28px; height: 24px; padding: 0 8px; border-radius: 5px;
+  min-width: 26px; height: 22px; padding: 0 7px; border-radius: 5px;
   background: rgba(10, 12, 16, .9); border: 1px solid rgba(242, 234, 217, .14);
   font-size: 9px; font-weight: 700; color: rgba(242, 234, 217, .65); font-family: inherit;
-  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,.3); white-space: nowrap;
 }
 .kbd-key kbd {
   font-family: inherit; font-size: inherit;

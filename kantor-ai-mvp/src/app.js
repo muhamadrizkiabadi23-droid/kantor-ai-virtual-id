@@ -672,6 +672,7 @@
     }
 
     emitOfficeState();
+    if (typeof renderTaskBoard === "function") renderTaskBoard();
   }
 
   function openDetails(id) {
