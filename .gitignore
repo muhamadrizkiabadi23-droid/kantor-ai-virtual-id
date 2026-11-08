@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Secrets & local config
+.env
+.env.*
+!.env.example
+
+# Runtime data
+*.log
+.DS_Store
+Thumbs.db
+
+# Local prototype artifacts
+vid/*.mp4
+hasil/*.png
+arsip/data-runtime-lama/
+
+# Akun prototype (data konsumen, jangan masuk git)
+users.json

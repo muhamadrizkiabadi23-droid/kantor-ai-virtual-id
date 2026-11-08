@@ -1,0 +1,16 @@
+{
+  "name": "kantor-ai-merah-putih-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portable local prototype for the Kantor AI Merah Putih workflow",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
+  }
+}

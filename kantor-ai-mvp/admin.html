@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel Pemilik — Kantor AI</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="login-body">
+  <main class="login-wrap" style="max-width: 560px;">
+    <section class="login-card">
+      <div class="login-brand">
+        <div class="brand-mark" aria-hidden="true">▤</div>
+        <div>
+          <h1>Panel Pemilik</h1>
+          <p class="login-sub">Daftar konsumen yang sudah daftar</p>
+        </div>
+      </div>
+
+      <div id="admin-empty" class="login-note">Memuat…</div>
+      <div id="admin-list" hidden></div>
+
+      <button class="button login-submit" id="admin-back" type="button">Kembali ke kantor</button>
+    </section>
+    <p class="login-foot">Hanya akun <strong>bos</strong> yang bisa membuka panel ini.</p>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+      var listBox = document.getElementById("admin-list");
+      var emptyBox = document.getElementById("admin-empty");
+
+      fetch("/api/admin/users", { credentials: "same-origin" })
+        .then(function (response) {
+          if (!response.ok) throw new Error("forbidden");
+          return response.json();
+        })
+        .then(function (data) {
+          var users = (data && data.users) || [];
+          if (!users.length) {
+            emptyBox.textContent = "Belum ada konsumen yang daftar.";
+            return;
+          }
+          emptyBox.hidden = true;
+          listBox.hidden = false;
+          users.forEach(function (user) {
+            var row = document.createElement("div");
+            row.className = "admin-row";
+
+            var name = document.createElement("strong");
+            name.textContent = user.name;
+
+            var date = document.createElement("span");
+            var when = new Date(user.createdAt);
+            date.textContent = isNaN(when.getTime()) ? "-" : when.toLocaleString("id-ID");
+
+            row.appendChild(name);
+            row.appendChild(date);
+            listBox.appendChild(row);
+          });
+        })
+        .catch(function () {
+          emptyBox.textContent = "Anda bukan pemilik, atau sesi sudah habis.";
+        });
+
+      document.getElementById("admin-back").addEventListener("click", function () {
+        window.location.href = "/app";
+      });
+    })();
+  </script>
+
+  <style>
+    .admin-row {
+      display: flex; justify-content: space-between; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid rgba(242,234,217,.1);
+      font-size: 13px;
+    }
+    .admin-row:last-child { border-bottom: 0; }
+    .admin-row span { opacity: .65; font-size: 11px; }
+  </style>
+</body>
+</html>

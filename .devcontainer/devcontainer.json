@@ -1,0 +1,30 @@
+{
+  "name": "Kantor AI Merah Putih",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20-bookworm",
+  "features": {},
+  "forwardPorts": [4173],
+  "portsAttributes": {
+    "4173": {
+      "label": "Kantor AI (3D)",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    }
+  },
+  "postCreateCommand": "cd kantor-ai-mvp && npm install",
+  "remoteEnv": {
+    "HOST": "0.0.0.0"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "postStartCommand": "cd kantor-ai-mvp && npm start",
+  "shutdownAction": "stopContainer"
+}
